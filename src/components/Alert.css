@@ -1,0 +1,141 @@
+
+.alert-container {
+position: fixed;
+top: 0;
+left: 0;
+width: 100vw;
+height: 100vh;
+background: rgba(0,0,0,0.3);
+backdrop-filter: blur(4px);
+z-index: 1899;
+}
+
+.alert-content img {
+    display: block;
+    margin: 0 auto 1rem auto;
+    max-width: 80%;
+    height: auto;
+    transition: 0.1s ease-in-out;
+    animation: shake 0.8s infinite;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-0.4rem); }
+    20%, 40%, 60%, 80% { transform: translateX(0.4rem); }
+    100% { transform: translateX(0); }
+}
+
+.alert-content {
+     background-color: #fff3cd;
+  border: 1px solid #ffa502;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+  max-width: 40rem;
+  width: 60%;
+  margin: auto;
+  padding:1rem 2rem;
+  color: #856404;
+  font-family: 'Segoe UI', sans-serif;
+  z-index:1900;
+  top: 50%;
+  left: 50%;
+transform: translate(-50%, -50%);
+display: flex;
+flex-direction: column; 
+align-items: center;
+position: fixed;
+   
+}
+
+.alert-content h2{
+    margin-bottom:-2rem;
+   
+}
+
+
+
+.checker {
+    appearance: none;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid ;
+    border-radius: 4px;
+    background: #fffbe6;
+     color:#856404;
+    cursor: pointer;
+    position: relative;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+    transition: border-color 0.2s;
+}
+
+.checker.highlight{
+    animation: glitter 1.5s infinite;
+    transition:all 0.2s;
+    color:red;
+}
+    
+@keyframes glitter {
+  0%, 100% {
+    opacity: 0.4;
+    filter: brightness(1);
+    transform: scale(1);
+    
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(2.5);
+    transform: scale(1.1);
+    text-shadow: 2px 2px 10px var(--white);
+    
+  }
+}
+
+
+.checker:checked {
+    border-color: var(--green);
+    background: transparent;
+    animation:none;
+   
+}
+
+.checker:checked::after {
+    content: '';
+    position: absolute;
+    left: 00rem;
+    top: -0.3rem;
+    width: 1.5rem;
+    height: 0.6rem;
+    border: solid green;
+    border-width: 0 0.18rem 0.18rem 0;
+    transform:rotate(-45deg) scaleX(-1);
+    pointer-events: none;
+    
+}
+
+
+.alert-close{
+   
+    cursor: pointer;
+    font-size: 1.2rem;
+    left:50%;
+    top:10%;
+     z-index:1901;
+    margin:1rem 0;
+}
+
+label {
+    color:rgb(130, 108, 108);
+}
+
+.alert-link{
+    color:rgb(47, 47, 86);
+    font-size:0.9rem;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.alert-link:hover{
+    text-decoration:underline;
+}

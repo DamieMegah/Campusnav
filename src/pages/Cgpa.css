@@ -1,0 +1,55 @@
+.cgpa-container {       
+  padding: 1rem;           
+  background-color: url('src/assets/doodle2.jpg'); 
+  display:flex;
+  flex-direction:column;
+  align-items: center;
+  justify-content: space-evenly;
+} 
+
+
+.cgpa-container {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+
+
+.cgpa-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--doodle-bg);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.1;
+  z-index: 0;
+}
+
+
+
+.cgpa-container > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cgpa-container h1 {
+  font-size: 2rem;         /* text-2xl */
+  font-weight: bold;       
+  text-align: center;      /* text-center */
+  margin-bottom: 1.5rem;   /* mb-6 */
+}
+
+
+
+
+button {
+  background-color:var(--green); 
+  color: white;             
+  padding: 0.5rem 1rem;     /* py-2 px-4 */
+  border-radius: 0.375rem;  
+  cursor: pointer;
+  margin:0 0.3rem;
+  transition: background-color 0.3s ease;
+}  
+

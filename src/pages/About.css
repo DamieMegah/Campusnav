@@ -1,0 +1,44 @@
+
+  .about-container {
+    margin: 2rem auto;
+    padding: 1rem 6rem;
+    color: var(--white);
+    line-Height: 1.4;
+    margin-top:18rem;
+    display:flex;
+    flex-direction:column;
+    align-items: center;
+    justify-content: center;
+   
+  }
+  .title {
+    font-Size: 2.4rem;
+    margin-Bottom: 1rem;
+    text-Align: center;
+  }
+
+  .title span{
+    color:var(--yellow)
+  }
+  .paragraph {
+    margin-Bottom: 1rem;
+    font-Size: 1.2rem;
+  }
+  .link {
+    color: goldenrod;
+    text-Decoration: none;
+    font-Weight: 600;
+  }
+  .social-Container {
+    margin-Top: 2rem;
+    text-Align: center;
+    font-Size: 1.1rem;
+  }
+  .social-Link {
+    color: #555;
+    text-Decoration: none;
+    font-Weight: 500;
+  }
+
+  
+

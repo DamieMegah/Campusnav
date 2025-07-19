@@ -1,0 +1,46 @@
+ .container{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gpa, .cgpa{
+    display:flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center; 
+}
+
+ input{
+    padding:0.5rem;
+    border:.2px solid var(--white);
+     border-radius: 8px;
+     margin:0.5rem;
+     width: 10rem;
+     color:var(--white);
+}
+
+.line{
+    width:20rem;
+    display:flex;
+    justify-content:space-between;
+    align-items: center;
+}
+
+select{
+    border:.2px solid var(--white);
+     border-radius: 8px;
+     margin:0.5rem;
+     width: 10rem;
+     color:var(--white);
+      padding:0.5rem;
+}
+
+.label{
+    color:var(--white);
+}
+
+.predict{
+    margin:1.5rem;
+    width:100%;
+}

@@ -1,0 +1,24 @@
+.footer-container{
+  
+    justify-self:center;
+    margin-top:6rem;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    align-items:center;
+    gap:5rem;
+}
+
+small{
+    cursor:pointer;
+}
+
+small:hover{
+   color: var(--yellow); 
+}
+
+@media (max-width:760px) {
+    .footer-container{
+        margin-top:20rem;
+        
+    }
+}
