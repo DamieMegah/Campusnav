@@ -1,0 +1,20 @@
+{
+    "name": "CampusNav",
+    "short_name": "CampusNav",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#325398",
+    "theme_color": "#242424",
+    "icons": [
+        {
+            "src": "/campusnav-logo.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/campusnav-logo.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
