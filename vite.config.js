@@ -5,5 +5,5 @@ import react from '@vitejs/plugin-react-swc'
 const repoName = 'Campusnav'
 export default defineConfig({
   plugins: [react()],
-  base:"/Campusnav/",
+  base:"/",
 })
