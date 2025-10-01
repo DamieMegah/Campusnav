@@ -1,23 +1,38 @@
 // src/components/GpaCalculator.jsx
 import React, { useState } from 'react';
+import { useAppState } from '../context/StateContext';
 import './Cgpa.css';
 
+// ✅ Move this object outside to avoid re-creation on every render
 const GRADE_POINTS = {
-  Grade:null,
-  A: 4,
-  B: 3.50,
-  C: 2.50,
-  D: 1.50,
-  E: 1.00,
-  F: 0,
+  Grade: null,
+  A1: 4.00,
+  A2: 3.50,
+  B1: 3.25,
+  B2: 3.00,
+  C1: 2.75,
+  C2: 2.50,
+  D1: 2.25,
+  D2: 2.00,
+  F: 0.00,
 };
 
 const GpaCalculator = () => {
-  const [courses, setCourses] = useState([{ unit: '', grade: 'Grade' }]);
+  // ✅ Pull your global state
+  const { cgpaInputs, setCgpaInputs } = useAppState();
+
+  // ✅ Instead of local state, use context (persist across pages)
   const [gpa, setGpa] = useState(null);
 
+  // ✅ Initialize courses from context, fallback to one row if empty
+  const courses = cgpaInputs.courses || [{ unit: '', grade: 'Grade' }];
+
+  const setCourses = (newCourses) => {
+    setCgpaInputs({ ...cgpaInputs, courses: newCourses });
+  };
+
   const addCourse = () => {
-    setCourses([...courses, { unit: '', grade: 'A' }]);
+    setCourses([...courses, { unit: '', grade: 'Grade' }]);
   };
 
   const updateCourse = (index, field, value) => {
@@ -39,12 +54,10 @@ const GpaCalculator = () => {
         return;
       }
 
-      
-      if (gradePoint <= 0) {
-        alert('Please enter a grade value');
+      if (gradePoint === null) {
+        alert('Please select a grade for all courses.');
         return;
       }
-
 
       totalPoints += unit * gradePoint;
       totalUnits += unit;
@@ -55,22 +68,24 @@ const GpaCalculator = () => {
   };
 
   return (
-    <div className=" gpa">
+    <div className="gpa">
       <h2>🧮 GPA Calculator</h2>
+      <small>
+        Track your performance and analyze how much work is required in the current semester.
+      </small>
 
       {courses.map((course, index) => (
-        <div key={index} >
+        <div key={index}>
           <input
             type="number"
             placeholder="Course Unit"
             value={course.unit}
             onChange={(e) => updateCourse(index, 'unit', e.target.value)}
-          
           />
           <select
             value={course.grade}
             onChange={(e) => updateCourse(index, 'grade', e.target.value)}
-           placeholder="Your Grade"
+            placeholder="Your Grade"
           >
             {Object.keys(GRADE_POINTS).map((grade) => (
               <option key={grade} value={grade}>
@@ -82,21 +97,15 @@ const GpaCalculator = () => {
       ))}
 
       <div>
-        <button
-          onClick={addCourse}
-         
-        >
-          ➕ Add Course
-        </button>
-        <button
-          onClick={calculateGpa}>
-          🧠 Calculate GPA
+        <button onClick={addCourse}>➕ Add Another Course</button>
+        <button onClick={calculateGpa}>
+          <i className="fas fa-brain"></i> Calculate GPA
         </button>
       </div>
 
       {gpa && (
         <p>
-          ✅ Your GPA for this semester is: <span>{gpa}</span>
+          ✅ Your GPA for this semester will be: <span>{gpa}</span>
         </p>
       )}
     </div>

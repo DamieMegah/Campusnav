@@ -1,24 +1,26 @@
 .footer-container{
-  
     justify-self:center;
-    margin-top:6rem;
+    padding:1rem;
     display:grid;
     grid-template-columns: 1fr 1fr;
     align-items:center;
     gap:5rem;
+    position:fixed;
+    bottom:-3%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 small{
     cursor:pointer;
+      text-wrap: nowrap;
 }
 
 small:hover{
    color: var(--yellow); 
 }
-
-@media (max-width:760px) {
-    .footer-container{
-        margin-top:20rem;
-        
-    }
+.copy{
+    font-size:0.9rem;
+    color:white;
+    text-wrap: nowrap;
 }

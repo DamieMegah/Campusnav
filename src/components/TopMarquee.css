@@ -1,0 +1,87 @@
+/* TopMarquee.css */
+
+/* Container anchored at top of chat page */
+.marquee-wrap {
+  position: fixed;
+  top: 16%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1300px;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+/* inner background bar */
+.marquee-inner {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255,200,0,0.12), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,200,0,0.18);
+  padding: 6px 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+/* track that moves */
+.marquee-track {
+  display: inline-flex;
+  gap: 2rem;
+  white-space: nowrap;
+  align-items: center;
+
+  /* animation */
+  animation: marquee-left 18s linear infinite;
+}
+
+/* duplicate copy to create seamless loop */
+.marquee-duplicate {
+  margin-left: 2rem;
+}
+
+/* the text style */
+.marquee-text {
+  font-size: 0.99rem;
+  color: #fff;
+  letter-spacing: 0.2px;
+  display: inline-block;
+  padding-right: 1rem;
+}
+
+/* close button */
+.marquee-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.05rem;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background .15s ease;
+}
+.marquee-close:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+/* pause on hover for readability */
+.marquee-inner:hover .marquee-track,
+.marquee-track:focus {
+  animation-play-state: paused;
+}
+
+/* animation keyframes: move left by 100% of one copy's width */
+@keyframes marquee-left {
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(-50%); } /* duplicate text makes -50% loop nicely */
+}
+
+/* small screen adjustments */
+@media (max-width: 600px) {
+  .marquee-text { font-size: 0.85rem; }
+  .marquee-wrap { padding: 6px; top:11%; }
+}

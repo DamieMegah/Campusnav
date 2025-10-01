@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import './Alert.css';
 import alertIcon from '../assets/alert-image.png';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+
 
 function Alert() {
   const [checked, setChecked] = useState(false);
   const [visible, setVisible] = useState(true);
+  const navigate = useNavigate();
 
   const handleContinue = () => {
     if (checked) {
       setVisible(false);
       document.querySelector('.checker').classList.remove('highlight');
+      navigate("/"); // Go to HallSearch page
     } else {
       alert("Please read and accept the disclaimer before proceeding.");
       document.querySelector('.checker').classList.add('highlight'); // Highlight the checkbox if not checked
@@ -41,7 +45,14 @@ All payments must only be made directly on the official school website or throug
           &nbsp; I have read and understood the disclaimer
         </label>
 
-        <Link to="/about" className="alert-link"> Read Privacy & Policy</Link>
+       <a 
+  href="https://damiemegah.github.io/damiemegah_privacy-policy/" 
+  target="_blank" 
+  rel="noopener noreferrer" 
+  className="alert-link"
+>
+  Read Privacy & Policy
+</a>
 
         <button className="alert-close" onClick={handleContinue}>
           Continue

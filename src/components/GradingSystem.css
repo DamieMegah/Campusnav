@@ -1,0 +1,42 @@
+.grading-system {
+  margin-top: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  background:#242424d5;
+}
+
+.grading-summary {
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+container{
+    display:flex;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin-top: 1rem;
+   
+}
+
+.grading-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  background: linear-gradient(2deg,  #d41313,  8%, #75be14, 45%,  #05f725);
+}
+
+.grading-table th,
+.grading-table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.grading-table th {
+  background-color: #242424;
+  font-weight: bold;
+}

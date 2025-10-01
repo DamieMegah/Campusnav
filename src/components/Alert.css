@@ -139,3 +139,16 @@ label {
 .alert-link:hover{
     text-decoration:underline;
 }
+
+@media(max-width: 767.98px){
+    .alert-content {
+        
+         width: 80%;
+    }
+    h2{
+        font-size:2rem; 
+    }
+     p{
+        font-size:1.5rem;
+    }
+}

@@ -1,0 +1,601 @@
+/* Live Chat – Vanilla CSS (no Tailwind) */
+
+:root {
+  --lc-bg: rgba(11, 11, 20, 0.192);
+  --lc-surface: #1c1f29;
+  --lc-surface-2: #232737;
+  --lc-accent: #2563eb;
+  /* send button */
+  --lc-accent-press: #1d4ed8;
+  --lc-pin: #050c0f9f;
+  /* pinned bar */
+  --lc-text: #f5f7ff;
+  --lc-text-dim: rgb(207, 225, 203);
+  --lc-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  --lc-radius: 1rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.lc-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 79vh;
+  width: 95vw;
+  padding: 10px;
+  background: var(--lc-bg);
+  color: var(--lc-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  gap: 8px;
+  border-radius: var(--lc-radius);
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index:1000;
+   
+
+}
+
+/* Pinned bar */
+.lc-pinned {
+  background: var(--lc-pin);
+  color: #fff;
+  border-radius: var(--lc-radius);
+  padding: 8px 10px;
+  text-align: center;
+  font-weight: 800;
+  box-shadow: var(--lc-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.lc-pin-emoji {
+  display: inline-block;
+  font-size: 1.5rem;
+  transform: translateY(-1px);
+  cursor:pointer;
+}
+
+.lc-pinned-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Stage (message area) */
+.lc-stage {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  border-radius: var(--lc-radius);
+  background: transparent;
+
+}
+
+
+.lc-stream {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* messages start from bottom */
+  padding: 0px 8px;
+  gap: 4px;
+  overflow: hidden;
+  margin-bottom: 4rem;
+  position:relative;
+ 
+
+}
+
+
+
+/* Default bubble */
+
+.lc-bubble {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    background: rgba(187, 233, 195, 0.06);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.9rem 0.6rem;
+    max-width: 30rem;
+    line-height: 1.4;
+    font-size: 0.8rem;
+    margin: 0.6rem 0;
+    overflow-wrap: anywhere;
+}
+.lc-bubble {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    background: rgba(187, 233, 195, 0.06);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.9rem 0.6rem;
+    max-width: 30rem;
+    line-height: 1.4;
+    font-size: 0.8rem;
+    margin: 0.6rem 0;
+    overflow-wrap: anywhere;
+}
+.lc-bubble {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    background: rgba(187, 233, 195, 0.06);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.9rem 0.6rem;
+    max-width: 30rem;
+    line-height: 1.4;
+    font-size: 0.8rem;
+    margin: 0.6rem 0;
+    overflow-wrap: anywhere;
+}
+
+.lc-reply-quote{
+  display: flex;
+  flex-direction: column;
+  align-items:flex-start;
+  gap: 0.1rem;
+  background: rgba(5, 250, 78, 0.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding:0.9rem 0.6rem;
+  word-wrap: break-word;
+  overflow-wrap:anywhere;
+  line-height: 1.2;
+  font-size:0.7rem;
+  font-style:oblique;
+  z-index:100;
+  
+}
+
+
+.lc-bubble-message {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-all; /* Add this to handle non-whitespace characters */
+    overflow: hidden;
+}
+
+.lc-bubble-header {
+  display: flex;
+  align-items: center; /* keep icon + name aligned horizontally */
+  margin-bottom: 4px; 
+  padding:0 0.1rem;
+  color:rgb(102, 234, 186);
+  word-wrap: break-word;
+}
+
+
+.reply-preview{
+  position:absolute;
+  width:35rem;
+  top:-8rem;
+  left:16rem;
+  word-wrap: break-word;
+  background: rgba(101, 228, 100, 0.376);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(233, 199, 51, 0.5);
+  padding:0.5rem;
+  border-radius:1rem;
+}
+
+.reply-header{
+   word-wrap: break-word;
+  background: rgba(101, 218, 100, 0.106);
+  color:yellow;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(153, 199, 51, 0.155);
+  padding:0.5rem;
+  border-radius:0.4rem;
+}
+
+
+
+.reply-preview button{
+  font-size:0.7rem;
+  font-weight:bolder;
+  padding:0.2rem 0.4rem;
+  background: rgba(240, 240, 246, 0.204);
+  color:red;
+  position:absolute;
+}
+
+
+
+
+/* name */
+ .lc-bubble-text small {
+  font-style:italic;
+  font-size:0.8rem;
+  font-weight:900;
+}
+
+/* My own messages */
+.lc-bubble.mine {
+  background: rgba(59, 130, 246, 0.2);
+  /* bluish */
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  align-self: flex-end;
+ 
+ 
+}
+
+
+
+.lc-pin-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 10px;
+  color: rgb(50, 231, 50);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.lc-pin-btn:hover {
+  transform: translateY(-1px) scale(1.08);
+  background: rgba(250, 204, 21, 0.12);
+}
+
+.lc-pin-btn:active {
+  transform: translateY(0) scale(0.98);
+  color: rgb(247, 14, 14);
+  background: red;
+}
+
+/* Inputs row */
+.lc-inputs {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  gap: 0.1rem;
+  align-items: center;
+  position:relative;
+}
+
+.lc-mode-icons{
+  position:absolute;
+  left:2rem;
+  font-size:1.4rem;
+ 
+  
+  
+}
+.user-mode {
+  color: rgba(142, 243, 106, 0.082); /* fills the icon */
+  stroke: green; /* outline */
+  stroke-width: 25px;
+  fill: green; /* fallback fill */
+  position:relative;
+  z-index: 1;
+}
+
+
+.anon-mode {
+  color: rgba(238, 34, 7, 0.082); /* fills the icon */
+  stroke: red; /* outline */
+  stroke-width: 25px;
+  fill: green; /* fallback fill */
+  position:relative;
+  z-index: 1;
+}
+
+
+
+
+
+.lc-input {
+  background: transparent;
+  color: var(--lc-text);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  width: 10rem;
+  height: 3.5rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lc-input-nick {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: copy;
+   padding-left:4rem;
+}
+
+.lc-input-nick:focus{
+  width:12rem;
+}
+
+
+.lc-input-msg {
+  width: 35rem;
+  padding: 0 2rem;
+}
+
+.lc-input-msg:focus {
+  transform: scaleY(1.3) scaleX(1.02);
+}
+
+.lc-input::placeholder {
+  color: var(--lc-text-dim);
+}
+
+.lc-input:focus {
+  border-color: rgba(37, 99, 235, 0.75);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.camera{
+  position:absolute;
+  right:20rem;
+  color:blue;
+  padding:0.9rem;
+  color: rgba(238, 34, 7, 0.082); /* fills the icon */
+  stroke: blue; /* outline */
+  stroke-width: 25px;
+  fill: green; 
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius:var(--lc-radius);
+}
+
+
+   .camera:hover{
+   background:green;
+   border: 1px solid gold;
+   transform:scale(1.2);
+   stroke: gold;
+   }
+
+
+.lc-send {
+  background: var(--lc-accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 2rem 4rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.06s ease;
+}
+
+.lc-send:hover {
+  background: var(--lc-accent-press);
+}
+
+.lc-send:active {
+  transform: translateY(3px);
+}
+/* Shows a neutral placeholder block with built-in text */
+.lc-transfer {
+  position: relative;
+  display: inline-block;
+  padding: 14rem 5rem;
+  border-radius: 8px;
+  background: #534949;
+  margin-top: 6px;
+  font-size: 15px;
+  opacity: 0.95;
+}
+
+.lc-media-grid {
+  transition: all 0.3s ease-in-out;
+}
+
+.lc-media-grid:hover {
+  transform: scale(1.8);
+   margin: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index:205;
+}
+
+ .lc-media-grid:hover ~ .lc-transfer, .lc-media-grid:hover ~ .lc-bubble {
+  opacity:0;
+  display:none;
+}
+
+.pending{
+  font-size:6rem;
+  margin: 1rem auto;
+}
+
+.lc-actions{
+  background:transparent;
+  display:flex;
+  flex-direction:row-reverse;
+  font-size:1rem;
+  background: rgba(187, 233, 195, 0.06);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+}
+
+.lc-actions-2{
+  display:flex;
+  flex-direction:row;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+
+}
+
+ .lc-bubble.mine .lc-actions{
+   background: rgba(59, 130, 246, 0.2);
+  /* bluish */
+  border: 1px solid rgba(59, 130, 246, 0.4);
+   left:0;
+}
+
+.lc-hashtag {
+  color: #1da1f2; 
+  cursor: pointer;
+  font-weight: 500;
+}
+.lc-hashtag:hover {
+  text-decoration: underline;
+}
+
+
+
+.lc-like-btn, .lc-del-btn, .lc-reply-btn{
+background-color:transparent;
+padding:0;
+border:none;
+cursor:pointer;
+padding:0.5rem;
+}
+
+.lc-like-btn:hover, .lc-del-btn:hover{
+  background-color:rgba(255, 255, 0, 0.192);
+}
+
+
+
+
+/*  tiny pulse */
+@keyframes lcPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+.lc-transfer { animation: lcPulse 1.2s ease-in-out 20s; }
+
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-180px) scale(1.5);
+    opacity: 0.3;
+    color:red;
+  }
+   100% {
+    transform: translateY(-200px) scale(7.9);
+    opacity: 0;
+    color:gold;
+
+   }
+}
+
+
+.lc-like-btn .liked {
+  color: red;
+}
+
+.animate-floatUp {
+  animation: floatUp 1s ease-out forwards;
+  position:absolute;
+}
+
+
+
+/* Mobile quaries */
+@media (max-width: 768px) {
+
+  .lc-wrap {
+    height: 83vh;
+    width: 100vw;
+  }
+
+  .lc-bubble{
+  font-size:1.5rem;
+  margin:0.5rem 0; 
+   overflow-wrap:wrap;
+ }
+
+  .lc-inputs {
+    grid-template-columns: 1fr 6fr 1fr;
+    gap: 0.01rem;
+
+  }
+
+  .lc-input {
+    width: 5rem;
+    height: 5rem;
+  }
+
+  .lc-mode-icons{
+  left:2.1rem;
+  font-size:2.5rem;
+  z-index:-2;
+
+}
+
+
+  .lc-input-nick {
+    font-size: 2.5rem;
+    padding-left:4.5rem;
+
+  }
+
+  .lc-input-msg {
+    padding: 2rem;
+    width: 95%;
+  }
+
+
+
+  .camera{
+  font-size:2.5rem;
+  color:blue;
+  padding:0.1rem 0.9rem;
+  color: rgba(238, 34, 7, 0.082); /* fills the icon */
+  stroke: white; 
+  stroke-width: 20px;
+  fill: white; 
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius:var(--lc-radius);
+  right:7.2rem;
+  }
+
+
+  .lc-send {
+    padding: 1rem 1.5rem;
+    font-size: 2rem;
+  }
+
+  
+.lc-like-btn:hover{
+  color: red;
+}
+
+.reply-preview{
+  position:absolute;
+  width:25rem;
+  top:-8rem;
+  left:8rem;
+}
+
+.lc-bubble-message{
+  max-width:99%;
+   word-wrap: break-word;
+   overflow-wrap:wrap;
+}
+
+
+}
+
+/* Optional: nicer scrollbars for WebKit (stage may not scroll, but future-proofing) */
+.lc-stage::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.lc-stage::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}

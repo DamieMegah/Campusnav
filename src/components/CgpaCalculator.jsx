@@ -1,10 +1,25 @@
-// src/components/CgpaCalculator.jsx
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { useAppState } from '../context/StateContext';
 import './Cgpa.css';
 
 const CgpaCalculator = () => {
-  const [semesters, setSemesters] = useState([{ gpa: '', units: '' }]);
-  const [cgpa, setCgpa] = useState(null);
+ const { cgpaInputs, setCgpaInputs } = useAppState();
+
+  // initialize from context if available
+  const [semesters, setSemesters] = useState(
+    cgpaInputs.semesters || [{ gpa: '', units: '' }]
+  );
+  const [cgpa, setCgpa] = useState(cgpaInputs.cgpa || null)
+
+   useEffect(() => {
+    setCgpaInputs({
+      ...cgpaInputs,
+      semesters,
+      cgpa
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [semesters, cgpa]); 
 
   const addSemester = () => {
     setSemesters([...semesters, { gpa: '', units: '' }]);
@@ -24,8 +39,8 @@ const CgpaCalculator = () => {
       const gpa = parseFloat(sem.gpa);
       const units = parseFloat(sem.units);
 
-      if (isNaN(gpa) || isNaN(units) || gpa < 0 || gpa > 5 || units <= 0) {
-        alert('Enter valid GPA (0-5) and unit values for all semesters.');
+      if (isNaN(gpa) || isNaN(units) || gpa < 0.00 || gpa > 4.00 || units <= 0) {
+        alert('Enter valid GPA (0.00-4.00) and unit values for all semesters.');
         return;
       }
 
@@ -40,6 +55,7 @@ const CgpaCalculator = () => {
   return (
     <div>
       <h2 className="cgpa container">📊 CGPA Calculator</h2>
+      <small>Get insight on how to achive your target grade, get started </small>
 
       {semesters.map((sem, index) => (
         <div key={index} className="inner">
@@ -74,7 +90,7 @@ const CgpaCalculator = () => {
           onClick={calculateCgpa}
 
         >
-          🧠 Calculate CGPA
+         <i className="fas fa-brain"></i> Calculate Total CGPA
         </button>
       </div>
 

@@ -3,43 +3,47 @@ import React, { useState } from 'react';
 import CgpaPredictor from '../components/CgpaPredictor';
 import GpaCalculator from '../components/GpaCalculator';
 import CgpaCalculator from '../components/CgpaCalculator';
-import Footer from '../components/Footer';
+import GradingSystem from '../components/GradingSystem';
+import { useAppState } from '../context/StateContext';
+
 import  './Cgpa.css';
 
 const CgpaPage = () => {
-  const [activeComponent, setActiveComponent] = useState('predictor');
+ const { activeCgpaComponent, setActiveCgpaComponent } = useAppState();
 
   return (
     <div className="cgpa-container">
-      <h1>🎓 CGPA Tool Center</h1>
+      <h1> CGPA Tools<i className="fas fa-cogs"></i></h1>
 
       <div className="inner">
         <button
           className="btn-1"
-          onClick={() => setActiveComponent('predictor')}
+          onClick={() => setActiveCgpaComponent('predictor')}
         >
-          🎯 CGPA Predictor
+          <i className="fas fa-bullseye"></i> CGPA Predictor
         </button>
         <button
           className="btn-2"
-          onClick={() => setActiveComponent('gpa')}
+          onClick={() => setActiveCgpaComponent('gpa')}
         >
-          🧮 GPA Calculator
+          <i className="fas fa-calculator"></i> GPA Calculator
         </button>
         <button
           className="btn-3"
-          onClick={() => setActiveComponent('cgpa')}
+          onClick={() => setActiveCgpaComponent('cgpa')}
         >
-          📊 CGPA Calculator
+          <i className="fas fa-bar-chart"></i> CGPA Calculator
         </button>
       </div>
 
       <div className="box">
-        {activeComponent === 'predictor' && <CgpaPredictor />}
-        {activeComponent === 'gpa' && <GpaCalculator />}
-        {activeComponent === 'cgpa' && <CgpaCalculator />}
+        {activeCgpaComponent === 'predictor' && <CgpaPredictor />}
+        {activeCgpaComponent === 'gpa' && <GpaCalculator />}
+        {activeCgpaComponent === 'cgpa' && <CgpaCalculator />}
       </div>
-       <Footer />
+      <div className="grading-system-container">
+        <GradingSystem  />
+      </div>
     </div>
   );
 };

@@ -1,13 +1,33 @@
 // src/components/CgpaPredictor.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
+import { useAppState } from '../context/StateContext';
 import './Cgpa.css';
 
 
 const CgpaPredictor = () => {
-  const [lastCgpa, setLastCgpa] = useState('');
-  const [semestersLeft, setSemestersLeft] = useState('');
-  const [targetCgpa, setTargetCgpa] = useState('4.5');
+  const { cgpaInputs, setCgpaInputs } = useAppState();
+
+  // initialize local state from context
+  const [lastCgpa, setLastCgpa] = useState(cgpaInputs.lastCgpa || '');
+  const [semestersLeft, setSemestersLeft] = useState(cgpaInputs.semestersLeft || '');
+  const [targetCgpa, setTargetCgpa] = useState(cgpaInputs.targetCgpa || '4.5');
   const [requiredGpa, setRequiredGpa] = useState(null);
+
+  // save to context whenever inputs change
+  useEffect(() => {
+    setCgpaInputs({
+      ...cgpaInputs,
+      lastCgpa,
+      semestersLeft,
+      targetCgpa
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastCgpa, semestersLeft, targetCgpa]);
+
+  // (optional) restore requiredGpa if you saved it in context as well
+  // useEffect(() => {
+  //   if (cgpaInputs.requiredGpa) setRequiredGpa(cgpaInputs.requiredGpa);
+  // }, []);
 
   const calculateRequiredGpa = () => {
     const current = parseFloat(lastCgpa);
@@ -20,14 +40,15 @@ const CgpaPredictor = () => {
     }
 
     const totalSemesters = sems + 1; // include current
-    const required = ((target * totalSemesters) - (current)) / sems;
+    const required = ((target * totalSemesters) - current) / sems;
 
     setRequiredGpa(required.toFixed(2));
+    // if you also want to persist requiredGpa:
+     setCgpaInputs(prev => ({ ...prev, requiredGpa: required.toFixed(2) }));
   };
-
   return (
     <div>
-      <h2 className="">🎯 Predict Target CGPA</h2>
+      <h2 className="">Calculate Possible CGPA</h2>
       <div className="cgpa">
         <div className='line'>
           <label className="label">Last CGPA</label>
@@ -55,11 +76,13 @@ const CgpaPredictor = () => {
             onChange={(e) => setTargetCgpa(e.target.value)}
             className="w-full p-2 border rounded"
           >
-            <option value="4.5">First Class (≥ 4.5)</option>
-            <option value="3.5">Second Class Upper (≥ 3.5)</option>
-            <option value="2.5">Second Class Lower (≥ 2.5)</option>
-            <option value="1.5">Third Class (≥ 1.5)</option>
-            <option value="5.0">Custom (5.0)</option>
+            <option value="4.00">Distinction/First Class (≥ 4.00)</option>
+            <option value="3.50">Distinction (≥ 3.50)</option>
+            <option value="3.00">Second Class Upper (≥ 3.00)</option>
+            <option value="2.50">Second Class Lower(≥ 2.50)</option>
+            <option value="2.00">Pass(≥ 2.00)</option>
+            <option value="1.99">Fail(Less than 1.99)</option>
+            <option value="5.0">Custom (0.00)</option>
           </select>
         </div>
 
@@ -67,7 +90,7 @@ const CgpaPredictor = () => {
           onClick={calculateRequiredGpa}
           className="predict"
         >
-          🧠 Predict
+        <i className="fas fa-brain"></i> Predict
         </button>
 
         {requiredGpa && (
