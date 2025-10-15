@@ -109,7 +109,7 @@
     line-height: 1.4;
     font-size: 0.8rem;
     margin: 0.6rem 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
 }
 .lc-bubble {
     display: flex;
@@ -125,7 +125,7 @@
     line-height: 1.4;
     font-size: 0.8rem;
     margin: 0.6rem 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
 }
 .lc-bubble {
     display: flex;
@@ -141,7 +141,7 @@
     line-height: 1.4;
     font-size: 0.8rem;
     margin: 0.6rem 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
 }
 
 .lc-reply-quote{
@@ -155,7 +155,7 @@
   border-radius: 10px;
   padding:0.9rem 0.6rem;
   word-wrap: break-word;
-  overflow-wrap:anywhere;
+  overflow-wrap:normal;
   line-height: 1.2;
   font-size:0.7rem;
   font-style:oblique;
@@ -166,8 +166,8 @@
 
 .lc-bubble-message {
     max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-all; /* Add this to handle non-whitespace characters */
+    overflow-wrap: normal;
+    word-break: keep-all; /* Add this to handle non-whitespace characters */
     overflow: hidden;
 }
 
@@ -395,13 +395,43 @@
 .lc-media-grid {
   transition: all 0.3s ease-in-out;
 }
-
-.lc-media-grid:hover {
-  transform: scale(1.8);
-   margin: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index:205;
+/* Thumbnail hover → partial fullscreen centered */
+.lc-media-thumb {
+  max-width: 160px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: transform 0.3s ease, z-index 0.3s;
+  position: relative;
 }
+
+.lc-media-thumb:hover {
+  transform: scale(2.5); /* enlarge */
+  z-index: 50;
+}
+
+/* Viewer overlay */
+.lc-viewer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Viewer media (image/video) */
+.lc-viewer-media {
+  max-width: 95%;
+  max-height: 95%;
+  border-radius: 10px;
+  cursor: zoom-in;
+}
+ 
 
  .lc-media-grid:hover ~ .lc-transfer, .lc-media-grid:hover ~ .lc-bubble {
   opacity:0;

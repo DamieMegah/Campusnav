@@ -26,7 +26,7 @@ container{
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
-  background: linear-gradient(2deg,  #d41313,  8%, #75be14, 45%,  #05f725);
+  background: linear-gradient(2deg,  #d41313,  8%, #75be14, 45%,  #08ac1ee3);
 }
 
 .grading-table th,

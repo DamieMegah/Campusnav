@@ -68,7 +68,7 @@ const CompassDistance = ({ currentLocation, selectedHall }) => {
         borderRadius: "12px",
         boxShadow: "0px 4px 8px rgba(0,0,0,0.2)",
         textAlign: "center",
-        zIndex: 100,
+        zIndex: 10000,
       }}
     >
       <div>

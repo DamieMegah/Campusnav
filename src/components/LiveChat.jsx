@@ -98,7 +98,7 @@ export default function LiveChat() {
   // Chat States
   // ==========================================
   const [userId, setUserId] = useState(null);
- const [messages, setMessages] = useState([]); 
+ const [messages, setMessages] = useState([]);; 
    // fallback in case context didn’t load yet
   const safeMessages = messages || [];
   // ✅ Guard against undefined
@@ -581,42 +581,30 @@ const deleteMessage = async (msg) => {
             </div>
 
             {/* Media */}
-            {m.message_media && m.message_media.length > 0 && (
-              <div className="lc-media-grid" style={{ marginTop: 8 }}>
-                {m.message_media.map((file) =>
-                  (file.mime || "").startsWith("image/") ? (
-                    <img
-                      key={file.id}
-                      src={file.url}
-                      alt={file.file_name || "image"}
-                      style={{
-                        maxWidth: 160,
-                        borderRadius: 6,
-                        marginBottom: 6,
-                        cursor: "pointer",
-                      }}
-                      onClick={() => handleDownload(file, m.id)}
-                    />
-                  ) : (
-                    <video
-                      key={file.id}
-                      src={file.url}
-                      controls
-                      autoPlay
-                      muted
-                      loop
-                      style={{
-                        maxWidth: 160,
-                        borderRadius: 8,
-                        marginBottom: 6,
-                        cursor: "pointer",
-                      }}
-                      onClick={() => handleDownload(file, m.id)}
-                    />
-                  )
-                )}
-              </div>
-            )}
+           {m.message_media && m.message_media.length > 0 && (
+  <div className="lc-media-grid" style={{ marginTop: 8 }}>
+    {m.message_media.map((file) =>
+      (file.mime || "").startsWith("image/") ? (
+        <img
+          key={file.id}
+          src={file.url}
+          alt={file.file_name || "image"}
+          className="lc-media-thumb"
+          onClick={() => setViewer({ url: file.url, type: "image" })}
+        />
+      ) : (
+        <video
+          key={file.id}
+          src={file.url}
+          className="lc-media-thumb"
+          muted
+          loop
+          onClick={() => setViewer({ url: file.url, type: "video" })}
+        />
+      )
+    )}
+  </div>
+)}
 
             {/* Pending Transfers */}
             {(pendingUploads.some((p) => p.messageId === m.id && p.status !== "done") ||
@@ -763,64 +751,39 @@ const deleteMessage = async (msg) => {
       {/* Media Viewer        */}
       {/* =================== */}
       {viewer && (
-        <div className="lc-viewer" onClick={() => setViewer(null)} // close viewer on background click
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(0,0,0,0.8)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 9999,
-      }}>
-          {viewer.type === "image" ? (
-                    <img
-          src={viewer.url}
-          alt="full"
-          className="lc-viewer-img"
-          style={{
-            transform: `scale(${scale})`,
-            transition: "transform 0.3s ease",
-            cursor: "pointer",
-          }}
-          onClick={(e) => {
-            e.stopPropagation(); // prevent closing the viewer
-            handleClick();
-          }}
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            handleDoubleClick(e);
-          }}
-        />
+  <div
+    className="lc-viewer"
+    onClick={() => setViewer(null)} // close on background
+  >
+    {viewer.type === "image" ? (
+      <img
+        src={viewer.url}
+        alt="full"
+        className="lc-viewer-media"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (e.currentTarget.requestFullscreen) {
+            e.currentTarget.requestFullscreen();
+          }
+        }}
+      />
+    ) : (
+      <video
+        src={viewer.url}
+        controls
+        autoPlay
+        className="lc-viewer-media"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (e.currentTarget.requestFullscreen) {
+            e.currentTarget.requestFullscreen();
+          }
+        }}
+      />
+    )}
+  </div>
+)}
 
-          ) : (
-             <video
-          src={viewer.url}
-          controls
-          autoPlay
-          muted
-          loop
-          className="lc-viewer-video"
-          style={{
-            transform: `scale(${scale})`,
-            transition: "transform 0.3s ease",
-            cursor: "pointer",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClick();
-          }}
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            handleDoubleClick(e);
-          }}
-        />
-          )}
-        </div>
-      )}
     </div>
     
 

@@ -1,35 +1,48 @@
-// src/components/RoutingMachine.jsx
 import { useEffect } from "react";
 import L from "leaflet";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
-const RoutingMachine = ({ from, to }) => {
+const RoutingMachine = ({ map, from, to }) => {
   useEffect(() => {
-    if (!from || !to || !window.mapInstance) return;
+    if (!map || !from || !to) return;
 
-    const routingControl = L.Routing.control({
+    let routingControl = L.Routing.control({
       waypoints: [
         L.latLng(from.lat, from.lng),
-        L.latLng(to.lat, to.lng)
+        L.latLng(to.lat, to.lng),
       ],
       router: L.Routing.osrmv1({
-        serviceUrl: "https://router.project-osrm.org/route/v1"
+        serviceUrl: "https://router.project-osrm.org/route/v1",
       }),
-      show: false,      // hide default UI
+      lineOptions: {
+        styles: [{ color: "#007bff", weight: 5, opacity: 0.8 }],
+      },
       addWaypoints: false,
-      routeWhileDragging: false,
       draggableWaypoints: false,
       fitSelectedRoutes: true,
-    }).addTo(window.mapInstance);
+      show: false,
+    }).addTo(map);
 
-    return () => window.mapInstance.removeControl(routingControl);
-  }, [from, to]);
+    // Optional logs
+    routingControl.on("routesfound", (e) => {
+      console.log("✅ Route found:", e.routes[0]);
+    });
+
+    routingControl.on("routingerror", (err) => {
+      console.error("❌ Routing error:", err);
+    });
+
+    // 🚫 Instead of removing immediately, delay cleanup to avoid async conflict
+    return () => {
+      if (routingControl && map.hasLayer(routingControl)) {
+        map.removeControl(routingControl);
+      }
+      routingControl = null;
+    };
+  }, [map, from, to]);
 
   return null;
 };
 
-
 export default RoutingMachine;
-
-

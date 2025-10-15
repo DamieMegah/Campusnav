@@ -7,11 +7,20 @@ import './Search.css';
 import CompassDistance from "./CompassDistance";
 import { supabase } from "../supabaseClient";
 import { useAppState } from "../AppState.jsx";
+ import { useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import yctBank from '../assets/YCT-microfinance-bank.jpg';
 import collegeHall from '../assets/college-hall.jpg';
 import zenithBank from '../assets/zenith-bank.jpg';
-import bursary from '../assets/bursary-registry.jpg'
+import bursary from '../assets/bursary-registry.jpg';
+import c5 from '../assets/c5.jpg';
+import ce from '../assets/ce.jpg';
+import mb from '../assets/mb.jpg';
+import mechEng from '../assets/mech-engine.jpg';
+import smbs from '../assets/smbs.jpg';
+import mpHall from '../assets/mp-theatre.jpg';
+import quantitySurvey from '../assets/quantity-survey.jpg';
+import scienceComplex from '../assets/scienceComp.jpg';
 
 
 
@@ -58,6 +67,22 @@ const HallSearch = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [areaName, setAreaName] = useState("");
+
+  
+ useEffect(() => {
+  if (selectedHall && mapRef.current && !currentLocation) {
+    console.log("🧭 Centering map on:", selectedHall.name);
+    setTimeout(() => {
+      mapRef.current.flyTo([selectedHall.lat, selectedHall.lng], 18, {
+        duration: 1.5,
+      });
+    }, 300);
+  }
+}, [selectedHall]);
+
+const mapRef = useRef(null);
+
+
 
   const { hallCode } = useParams();
 
@@ -125,7 +150,7 @@ const HallSearch = () => {
   externalButton.onclick = async () => {
     try {
       const url = `${window.location.origin}/location/${lat},${lng}`;
-      const text = `Check out this location: ${areaName || hallName} ${lat},${lng} on CampusNav+ 🚀 ${url}`;
+      const text = `Check out this location: ${areaName || hallName}  on CampusNav+ 🚀 ${url}`;
       if (navigator.share) {
         await navigator.share({ title: "CampusNav+ Location", text, url });
       } else {
@@ -176,8 +201,8 @@ useEffect(() => {
   
 
 async function shareLocation(location) {
-  const url = `${window.location.origin}/location/${currentLocation.lat},${currentLocation.lng}`;
-  const text = `Check out this location:${areaName}, ${currentLocation.lat}, ${currentLocation.lng} on CampusNav+ 🚀`;
+  const url = `${window.location.origin}/location/ yctcampusnav.netlify.app`;
+  const text = `Check out my location:${areaName}, ${currentLocation.lat}, ${currentLocation.lng} on CampusNav+ 🚀`;
 
   if (navigator.share) {
     try {
@@ -198,25 +223,47 @@ async function shareLocation(location) {
 
 async function shareHall(hall) {
   const url = `${window.location.origin}/hall/${selectedHall.lat},${selectedHall.lng}`;
-  const text = `Check out ${hall.name}, ${selectedHall.lat},${selectedHall.lng} on CampusNav+ 🚀`;
+  const text = `Check out ${hall.name},  on CampusNav+ 🚀 yctcampusnav.netlify.app`;
 
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: "CampusNav+ Hall", text, url });
-      console.log("Hall shared successfully!");
-    } catch (err) {
-      console.warn("Sharing failed or cancelled", err);
+  try {
+    // 1️⃣ Fetch hall image & convert to File
+    const response = await fetch(hall.img);
+    const blob = await response.blob();
+    const file = new File([blob], `${hall.code}.jpg`, { type: blob.type });
+
+    // 2️⃣ Try Web Share API with image
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: "CampusNav+ Hall",
+        text,
+        url,
+        files: [file],
+      });
+      console.log("Hall shared successfully with image!");
+      return;
     }
-  } else {
-    // fallback
+
+    // 3️⃣ If navigator.share exists but doesn’t support files, share text only
+    if (navigator.share) {
+      await navigator.share({ title: "CampusNav+ Hall", text, url });
+      console.log("Hall shared without image (fallback)");
+      return;
+    }
+
+    // 4️⃣ WhatsApp fallback (open with image + caption)
+    const waText = encodeURIComponent(`${text} \n${url}`);
+    const waImage = encodeURIComponent(hall.img);
     window.open(
-      `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`,
+      `https://wa.me/?text=${waText}%0A${waImage}`,
       "_blank"
     );
+
+  } catch (err) {
+    console.warn("Sharing failed or cancelled", err);
+    alert("Could not share, please try again!");
   }
 }
 
-  
 
 
 const [visitCount, setVisitCount] = useState(0);
@@ -246,25 +293,25 @@ async function logHallVisit(hallCode) {
   // Halls data
   const halls = [
     { name: "YCT Microfinance Bank", code: "YCT-MFB", img: yctBank, lat: 6.517496274395178, lng: 3.373883655685138 },
-    { name: "Multi Purpose Hall", code: "MP-Theatre", img: "/images/multi.jpg", lat: 6.5230, lng: 3.3760 },
-    { name: "Multi Purpose Hall MPT", code: "MPT", img: "/images/multi.jpg", lat: 6.5185702176752125, lng: 3.3763834744954337 },
-    { name: "MPT-G Multipurpose Hall Gallery", code: "MPT-G", img: "/images/multi.jpg", lat: 6.5185702176752125, lng: 3.3763834744954337 },
+    { name: "Multi Purpose Hall", code: "MP-Theatre", img: mpHall, lat: 6.5230, lng: 3.3760 },
+    { name: "Multi Purpose Hall MPT", code: "MPT", img: mpHall, lat: 6.5185702176752125, lng: 3.3763834744954337 },
+    { name: "MPT-G Multipurpose Hall Gallery", code: "MPT-G", img: mpHall, lat: 6.5185702176752125, lng: 3.3763834744954337 },
     { name: "Yusuf Grillo Art Gallery", code: "ART", img: "/images/grillo.jpg", lat: 6.517642107970536, lng: 3.373129954954516 },
     { name: "Art Complex", code: "ART COMPLEX", img: "/images/art-complex.jpg", lat: 6.517357700896631, lng: 3.3730709463357673 },
-    { name: "Science Complex", code: "SCI", img: "/images/science.jpg", lat: 6.51767, lng: 3.37258 },
+    { name: "Science Complex", code: "SCI", img: scienceComplex, lat: 6.51767, lng: 3.37258 },
     { name: "Cinema Surulere", code: "Film House", img: "/images/cinema.jpg", lat: 6.5000, lng: 3.3500 },
     { name: "Yaba College Of Technology", code: "YCT", img: "/images/yct.jpg", lat:6.519308385801105, lng: 3.37507094 },
     { name: "Skill Acquisition Center", code: "SAC", img: "/images/sac.jpg", lat: 6.51891, lng: 3.37218 },
     { name: "ETF Building", code: "ETF", img: "/images/ETF.jpg", lat: 6.51887, lng: 3.37236 },
     { name: "College Mosque", code: "MOSQUE", img: "/images/mosque.jpg", lat: 6.519308385801105, lng: 3.3723145634086484 },
-    { name: "School of Management and Business Studies", code: "SMBS", img: "/images/smbs.jpg", lat: 6.518983272177685, lng: 3.373135319374084 },
+    { name: "School of Management and Business Studies", code: "SMBS", img: smbs, lat: 6.518983272177685, lng: 3.373135319374084 },
     { name: "New Building", code: "NB", img: "/images/new.jpg", lat: 6.518422855575325, lng: 3.3725659266369634 },
     { name: "ZENITH BANK/CITM", code: "ZENITH-Citm", img: zenithBank, lat: 6.5176694912116035, lng: 3.374114325670222 },
     { name: "Bursary/Registry", code: "BURSARY", img: bursary, lat: 6.516923326046316, lng: 3.3741760164623313 },
     { name: "College Hall", code: "COLLEGE-HALL", img: collegeHall, lat: 6.516622194794321, lng: 3.3749243527859027 },
-    { name: "Civil Engineer", code: "CE", img: "/images/civil-engineer.jpg", lat: 6.517072559166145, lng: 3.374733915943704 },
-    { name: "Civil Engineer B", code: "CE", img: "/images/civil-engineer-b.jpg", lat: 6.517155170338396, lng: 3.375629773764753 },
-    { name: "Mechanical Engineer", code: "ME", img: "/images/mechanical-engineer.jpg", lat: 6.517016596751415, lng: 3.375141611718553 },
+    { name: "Civil Engineer", code: "CE", img: ce, lat: 6.517072559166145, lng: 3.374733915943704 },
+    { name: "Civil Engineer B", code: "C5", img: c5, lat: 6.517155170338396, lng: 3.375629773764753 },
+    { name: "Mechanical Engineer", code: "MLB", img: mechEng, lat: 6.517016596751415, lng: 3.375141611718553 },
     { name: "Library", code: "LIBRARY", img: "/images/library.jpg", lat: 6.517656166833382, lng: 3.3753454596059775 },
     { name: "CITM2", code: "CITM2", img: "/images/citm2.jpg", lat: 6.517224457117517, lng: 3.3730816751719472 },
     { name: "Rectors Office", code: "RECTOR", img: "/images/rector.jpg", lat: 6.516688816768297, lng: 3.374326220168855 },
@@ -283,6 +330,10 @@ async function logHallVisit(hallCode) {
     setShowSuggestions(false);
     logHallVisit(hall.code);
     fetchVisitCount(hall.code);
+     // ✅ Center map on hall if map already loaded
+  if (mapRef.current) {
+    mapRef.current.flyTo([hall.lat, hall.lng], 17, { duration: 1.5 });
+  }
   };
 
 const handleSearch = () => {
@@ -354,7 +405,7 @@ const handleSearch = () => {
           <p>
             <strong>📍Your Location:</strong> {areaName} <br />
             <strong>Coordinates:</strong> Lat: {currentLocation.lat.toFixed(5)}, Lng:{" "}
-            {currentLocation.lng.toFixed(5)} <button onClick={() => shareToChatAndExternal({ lat: currentLocation.lat, lng: currentLocation.lng, areaName })}>Share Location</button>
+            {currentLocation.lng.toFixed(5)} <button onClick={() => shareToChatAndExternal({areaName })}>Share Location</button>
           </p>
         </div>
       )}
@@ -389,35 +440,11 @@ const handleSearch = () => {
 
           {(currentLocation || selectedHall) && (
          <MapContainer
-  center={
-    currentLocation
-      ? [
-          (currentLocation.lat + selectedHall.lat) / 2,
-          (currentLocation.lng + selectedHall.lng) / 2
-        ]
-      : [selectedHall.lat, selectedHall.lng]
-  }
-  zoom={17}
-  scrollWheelZoom={false}
-  whenCreated={(mapInstance) => {
-    window.mapInstance = mapInstance;
-
-    // Define campus bounds (SW and NE corners)
-    const southWest = L.latLng(6.5220, 3.3770); // bottom-left corner
-    const northEast = L.latLng(6.5260, 3.3820); // top-right corner
-    const bounds = L.latLngBounds(southWest, northEast);
-
-    // Restrict panning
-    mapInstance.setMaxBounds(bounds);
-    mapInstance.on('drag', () => {
-      mapInstance.panInsideBounds(bounds, { animate: false });
-    });
-
-    // Optional: restrict zoom levels
-    mapInstance.setMinZoom(16);
-    mapInstance.setMaxZoom(20);
-  }}
-
+  ref={mapRef}
+  center={[6.517496274395178, 3.373883655685138]}
+  zoom={15}
+  
+  whenCreated={(map) => { mapRef.current = map; }}
   
 >
 
@@ -427,10 +454,11 @@ const handleSearch = () => {
     selectedHall={selectedHall}
   />
 )}
-  <TileLayer
-    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-    attribution="&copy; OpenStreetMap & DamieMegah contributors"
-  />
+ <TileLayer
+  url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+  attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+/>
+
 
   {currentLocation && (
     <Marker position={[currentLocation.lat, currentLocation.lng]}icon={currentLocationIcon}>
@@ -452,9 +480,13 @@ const handleSearch = () => {
     </Marker>
   ))}
 
-  {currentLocation && selectedHall && (
-    <RoutingMachine from={currentLocation} to={selectedHall} />
-  )}
+{currentLocation && selectedHall && mapRef.current && (
+  <RoutingMachine 
+    map={mapRef.current}
+    from={currentLocation}
+    to={selectedHall}
+  />
+)}
 
   {currentLocation && (
     <Polyline
@@ -462,7 +494,7 @@ const handleSearch = () => {
         [currentLocation.lat, currentLocation.lng],
         [selectedHall.lat, selectedHall.lng],
       ]}
-      color="green"
+      color="pink"
     />
   )}
 </MapContainer>
