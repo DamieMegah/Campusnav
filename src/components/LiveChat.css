@@ -32,6 +32,7 @@
   border-radius: var(--lc-radius);
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   z-index:1000;
+  animation:none;
    
 
 }
@@ -111,39 +112,105 @@
     margin: 0.6rem 0;
     overflow-wrap: normal;
 }
-.lc-bubble {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-    background: rgba(187, 233, 195, 0.06);
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 0.9rem 0.6rem;
-    max-width: 30rem;
-    line-height: 1.4;
-    font-size: 0.8rem;
-    margin: 0.6rem 0;
-    overflow-wrap: normal;
-}
-.lc-bubble {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-    background: rgba(187, 233, 195, 0.06);
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 0.9rem 0.6rem;
-    max-width: 30rem;
-    line-height: 1.4;
-    font-size: 0.8rem;
-    margin: 0.6rem 0;
-    overflow-wrap: normal;
+
+.lc-failed-alert {
+  font-size: 10px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
+.lc-retry-popup {
+  position: absolute;
+  bottom: 20px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.lc-retry-popup button {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+}
+
+.lc-retry-popup button:hover {
+  background: #f0f0f0;
+}
+
+.lc-retry-popup button:first-child {
+  color: #007bff;
+  border-bottom: 1px solid #eee;
+}
+
+.lc-retry-popup button:last-child {
+  color: #ff4d4f;
+}
+/* Container for the tick inside text bubbles */
+.lc-bubble-message {
+  position: relative;
+  padding-right: 25px; /* Space for the tick */
+  display: block;
+}
+
+/* The Tick Style */
+.lc-status-tick {
+  position: absolute;
+  bottom: 2px;
+  right: 5px;
+  color: #60eb53; 
+  display: flex;
+  align-items: center;
+}
+
+/* Tick for Media (Overlays on the bottom right of images) */
+.lc-media-status {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #fff;
+  z-index: 5;
+}
+
+/* Animation for when a message is 'Pending' (Before Supabase confirms) */
+.lc-clock-loader {
+  width: 10px;
+  height: 10px;
+  border: 1px solid #999;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+}
+.lc-clock-loader::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 1px;
+  background: #999;
+  top: 4px;
+  left: 4px;
+  transform-origin: left;
+  animation: clock-spin 2s linear infinite;
+}
+
+@keyframes clock-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .lc-reply-quote{
   display: flex;
   flex-direction: column;

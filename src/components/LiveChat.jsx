@@ -345,89 +345,127 @@ useEffect(() => {
   // Actions: Send, Delete, Pin, Like
   // ============================================================
 const sendMessage = async () => {
-  // Prevent sending empty messages without files
+  // 1. Validation: Prevent empty sends
   if (!input.trim() && uploadFiles.length === 0) return;
-  if (!userId) return; // Wait until userId is ready
+  if (!userId) return;
+
+  // Store current state values to use during the async process
+  const messageText = input;
+  const filesToUpload = [...uploadFiles];
+  const currentReply = replyTo;
+
+  // 2. OPTIMISTIC UPDATE: Create a temporary message to show immediately
+  const tempId = "temp-" + Date.now();
+  const optimisticMessage = {
+    id: tempId,
+    text: messageText,
+    nickname: nickname || "Anonymous",
+    user_id: userId,
+    created_at: null, // This 'null' triggers the 'pending clock' icon
+    status: "sending",
+    pinned: false,
+    reply_to: currentReply ? currentReply.id : null,
+    reply_to_user: currentReply?.nickname,
+    reply_to_text: currentReply?.text,
+    likes_count: 0,
+    icon: nickname && nickname.trim() !== "" ? faUser : faUserSecret,
+    message_media: [], // Media starts empty and fills as uploads finish
+  };
+
+  // Update UI immediately
+  setMessages((prev) => [...prev, optimisticMessage]);
+  
+  // Clear inputs immediately for that "snappy" feel
+  setInput("");
+  setUploadFiles([]);
+  setReplyTo(null);
 
   try {
-    // Insert new message
+    // 3. DATABASE INSERT: Send to Supabase
     const { data: inserted, error: insertErr } = await supabase
       .from("messages")
       .insert([
         {
-          text: input || null,
-          nickname: nickname || "",        // Display name
-          user_id: userId,                 // Permanent owner
+          text: messageText || null,
+          nickname: nickname || "",
+          user_id: userId,
           pinned: false,
-          reply_to: replyTo ? replyTo.id : null, // Store reply reference
+          reply_to: currentReply ? currentReply.id : null,
         },
       ])
       .select()
       .single();
+
     if (insertErr) throw insertErr;
 
-    const messageId = inserted.id;
+    const realMessageId = inserted.id;
 
-    // Prepare pending uploads
-    const pending = uploadFiles.map((f) => ({
-      id: `${Date.now()}-${f.name}`,
-      file: f,
-      mime: f.type,
-      status: "pending",
-      url: URL.createObjectURL(f),
-      messageId,
-    }));
-    setPendingUploads((prev) => [...prev, ...pending]);
+    // 4. MEDIA LOGIC: Handle file uploads if any
+    if (filesToUpload.length > 0) {
+      const pending = filesToUpload.map((f) => ({
+        id: `${Date.now()}-${f.name}`,
+        file: f,
+        mime: f.type,
+        status: "pending",
+        url: URL.createObjectURL(f),
+        messageId: realMessageId, // Link to the REAL message ID
+      }));
+      
+      setPendingUploads((prev) => [...prev, ...pending]);
 
-    // Upload files sequentially
-    for (const pendingFile of pending) {
-      try {
-        const cleanName = pendingFile.file.name.replace(/\s+/g, "_");
-        const path = `${messageId}/${Date.now()}_${cleanName}`;
+      for (const pendingFile of pending) {
+        try {
+          const cleanName = pendingFile.file.name.replace(/\s+/g, "_");
+          const path = `${realMessageId}/${Date.now()}_${cleanName}`;
 
-        const { error: upErr } = await supabase.storage
-          .from("media")
-          .upload(path, pendingFile.file);
-        if (upErr) throw upErr;
+          const { error: upErr } = await supabase.storage
+            .from("media")
+            .upload(path, pendingFile.file);
+          if (upErr) throw upErr;
 
-        const { data: publicData } = supabase.storage
-          .from("media")
-          .getPublicUrl(path);
-        const publicUrl = publicData?.publicUrl ?? null;
+          const { data: publicData } = supabase.storage
+            .from("media")
+            .getPublicUrl(path);
+          
+          const publicUrl = publicData?.publicUrl ?? null;
 
-        await supabase.from("message_media").insert({
-          message_id: messageId,
-          storage_path: path,
-          file_name: pendingFile.file.name,
-          mime: pendingFile.mime,
-          size: pendingFile.file.size,
-          url: publicUrl,
-        });
+          await supabase.from("message_media").insert({
+            message_id: realMessageId,
+            storage_path: path,
+            file_name: pendingFile.file.name,
+            mime: pendingFile.mime,
+            size: pendingFile.file.size,
+            url: publicUrl,
+          });
 
-        // Remove from pending after successful upload
-        setPendingUploads((prev) =>
-          prev.filter((p) => p.id !== pendingFile.id)
-        );
-      } catch (err) {
-        console.error("Upload failed:", err);
-        // Mark this file as error
-        setPendingUploads((prev) =>
-          prev.map((p) =>
-            p.id === pendingFile.id ? { ...p, status: "error" } : p
-          )
-        );
+          setPendingUploads((prev) => prev.filter((p) => p.id !== pendingFile.id));
+        } catch (err) {
+          console.error("Media upload failed:", err);
+          setPendingUploads((prev) =>
+            prev.map((p) => (p.id === pendingFile.id ? { ...p, status: "error" } : p))
+          );
+        }
       }
     }
 
-    // Reset states
-    setInput("");
-    setUploadFiles([]);
-    setReplyTo(null); // Clear reply state
-    fetchMessages();  // Refresh messages
-  } catch (e) {
+    // 5. FINAL SYNC: Refresh to replace optimistic message with real DB record
+    fetchMessages(); 
+
+  }catch (e) {
     console.error("sendMessage error:", e);
-    alert("check your connection");
+    // ✅ FIX: Instead of deleting, mark as failed
+    setMessages((prev) =>
+      prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m))
+    ); alert("Connection error: Message not sent");
   }
+};
+
+const resendMessage = (failedMsg) => {
+  // Remove the failed one from UI
+  setMessages((prev) => prev.filter((m) => m.id !== failedMsg.id));
+  // Put text back into input and call send (or trigger send directly)
+  setInput(failedMsg.text);
+  sendMessage();
 };
 
 const deleteMessage = async (msg) => {
@@ -535,8 +573,7 @@ const deleteMessage = async (msg) => {
         messages.map((m) => (
           <motion.div
             key={m.id}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+           initial={m.id.toString().startsWith('temp-') || !isMine(m) ? { opacity: 0, y: 30 } : false} animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
             className={`lc-bubble ${isMine(m) ? "mine" : ""}`}
@@ -575,36 +612,39 @@ const deleteMessage = async (msg) => {
                 </small>
               </div>
 
-              {m.text && (
-                <div className="lc-bubble-message">{renderMessageContent(m.text)}</div>
-              )}
+                {m.text && (
+                <div className="lc-bubble-message">
+                     {renderMessageContent(m.text)}
+                   
+              </div>
+                )}
             </div>
 
-            {/* Media */}
-           {m.message_media && m.message_media.length > 0 && (
-  <div className="lc-media-grid" style={{ marginTop: 8 }}>
-    {m.message_media.map((file) =>
-      (file.mime || "").startsWith("image/") ? (
-        <img
-          key={file.id}
-          src={file.url}
-          alt={file.file_name || "image"}
-          className="lc-media-thumb"
-          onClick={() => setViewer({ url: file.url, type: "image" })}
-        />
-      ) : (
-        <video
-          key={file.id}
-          src={file.url}
-          className="lc-media-thumb"
-          muted
-          loop
-          onClick={() => setViewer({ url: file.url, type: "video" })}
-        />
-      )
-    )}
-  </div>
-)}
+              {/* Media */}
+                {m.message_media && m.message_media.length > 0 && (
+                    <div className="lc-media-grid" style={{ marginTop: 8 }}>
+                      {m.message_media.map((file) =>
+                        (file.mime || "").startsWith("image/") ? (
+                          <img
+                            key={file.id}
+                            src={file.url}
+                            alt={file.file_name || "image"}
+                            className="lc-media-thumb"
+                            onClick={() => setViewer({ url: file.url, type: "image" })}
+                          />
+                        ) : (
+                          <video
+                            key={file.id}
+                            src={file.url}
+                            className="lc-media-thumb"
+                            muted
+                            loop
+                            onClick={() => setViewer({ url: file.url, type: "video" })}
+                          />
+                        )
+                      )}
+                  </div>
+                 )}
 
             {/* Pending Transfers */}
             {(pendingUploads.some((p) => p.messageId === m.id && p.status !== "done") ||
@@ -682,6 +722,32 @@ const deleteMessage = async (msg) => {
                 )}
               </div>
             </div>
+              {/*  status tick logic  */}
+                 {isMine(m) && (
+                   <div className="lc-status-container">
+                     {m.status === "failed" ? (
+                       <div className="lc-failed-alert" onClick={() => setActiveMessageId(m.id)}>
+                         <span className="text-red-500"> Failed to send</span>
+                         
+                         {activeMessageId === m.id && (
+                           <div className="lc-retry-popup">
+                              <button onClick={() => resendMessage(m)}>Resend</button>
+                              <button onClick={() => setMessages(prev => prev.filter(msg => msg.id !== m.id))}>Delete</button>
+                           </div>
+                         )}
+                       </div>
+                     ) : m.created_at ? (
+                       <span className="lc-status-tick">
+                          <svg width="17" height="16" viewBox="0 0 16 15" fill="none">
+                             <path d="M1.5 8.5L4.5 11.5L10.5 4.5" stroke="currentColor" strokeWidth="1.2" />
+                             <path d="M5.5 8.5L8.5 11.5L14.5 4.5" stroke="currentColor" strokeWidth="1.2" />
+                          </svg>
+                       </span>
+                     ) : (
+                       <span className="lc-clock-loader"></span>
+                     )}
+                   </div>
+                 )}
           </motion.div>
         ))
       )}

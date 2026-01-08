@@ -14,7 +14,7 @@ function Alert() {
     if (checked) {
       setVisible(false);
       document.querySelector('.checker').classList.remove('highlight');
-      navigate("/"); // Go to HallSearch page
+      
     } else {
       alert("Please read and accept the disclaimer before proceeding.");
       document.querySelector('.checker').classList.add('highlight'); // Highlight the checkbox if not checked
