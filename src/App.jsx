@@ -30,14 +30,15 @@ function App() {
     
      
        <div className="App">
-         <Alert />
+        
          <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<HallSearch />} />
               <Route path="/cgpa" element={<CgpaPage />} />
               <Route path="/about" element={<About />} />
               <Route path="/chat" element={<Chat />} />  {/* note lowercase */}
-              <Route path="/hall/:code" element={<HallPage />} />
+              <Route path="/location/:coords" element={<HallSearch />} />
+              <Route path="/hall/:hallCode" element={<HallSearch />} />
             </Route>
           </Routes>
        </div>
