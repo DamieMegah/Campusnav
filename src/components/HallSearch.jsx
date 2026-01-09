@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -6,7 +6,6 @@ import RoutingMachine from './RoutingMachine';
 import './Search.css';
 import CompassDistance from "./CompassDistance";
 import { supabase } from "../supabaseClient";
-import { useAppState } from "../AppState.jsx";
  import { useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import yctBank from '../assets/YCT-microfinance-bank.jpg';
@@ -23,7 +22,33 @@ import quantitySurvey from '../assets/quantity-survey.jpg';
 import scienceComplex from '../assets/scienceComp.jpg';
 
 
-
+  // Halls data
+  const halls = [
+    { name: "YCT Microfinance Bank", code: "YCT-MFB", img: yctBank, lat: 6.517496274395178, lng: 3.373883655685138 },
+    { name: "Multi Purpose Hall", code: "MP-Theatre", img: mpHall, lat: 6.5230, lng: 3.3760 },
+    { name: "Multi Purpose Hall MPT", code: "MPT", img: mpHall, lat: 6.5185702176752125, lng: 3.3763834744954337 },
+    { name: "MPT-G Multipurpose Hall Gallery", code: "MPT-G", img: mpHall, lat: 6.5185702176752125, lng: 3.3763834744954337 },
+    { name: "Yusuf Grillo Art Gallery", code: "ART", img: "/images/grillo.jpg", lat: 6.517642107970536, lng: 3.373129954954516 },
+    { name: "Art Complex", code: "ART COMPLEX", img: "/images/art-complex.jpg", lat: 6.517357700896631, lng: 3.3730709463357673 },
+    { name: "Science Complex", code: "SCI", img: scienceComplex, lat: 6.51767, lng: 3.37258 },
+    { name: "Cinema Surulere", code: "Film House", img: "/images/cinema.jpg", lat: 6.5000, lng: 3.3500 },
+    { name: "Yaba College Of Technology", code: "YCT", img: "/images/yct.jpg", lat:6.519308385801105, lng: 3.37507094 },
+    { name: "Skill Acquisition Center", code: "SAC", img: "/images/sac.jpg", lat: 6.51891, lng: 3.37218 },
+    { name: "ETF Building", code: "ETF", img: "/images/ETF.jpg", lat: 6.51887, lng: 3.37236 },
+    { name: "College Mosque", code: "MOSQUE", img: "/images/mosque.jpg", lat: 6.519308385801105, lng: 3.3723145634086484 },
+    { name: "School of Management and Business Studies", code: "SMBS", img: smbs, lat: 6.518983272177685, lng: 3.373135319374084 },
+    { name: "New Building", code: "NB", img: "/images/new.jpg", lat: 6.518422855575325, lng: 3.3725659266369634 },
+    { name: "ZENITH BANK/CITM", code: "ZENITH-Citm", img: zenithBank, lat: 6.5176694912116035, lng: 3.374114325670222 },
+    { name: "Bursary/Registry", code: "BURSARY", img: bursary, lat: 6.516923326046316, lng: 3.3741760164623313 },
+    { name: "College Hall", code: "COLLEGE-HALL", img: collegeHall, lat: 6.516622194794321, lng: 3.3749243527859027 },
+    { name: "Civil Engineer", code: "CE", img: ce, lat: 6.517072559166145, lng: 3.374733915943704 },
+    { name: "Civil Engineer B", code: "C5", img: c5, lat: 6.517155170338396, lng: 3.375629773764753 },
+    { name: "Mechanical Engineer", code: "MLB", img: mechEng, lat: 6.517016596751415, lng: 3.375141611718553 },
+    { name: "Library", code: "LIBRARY", img: "/images/library.jpg", lat: 6.517656166833382, lng: 3.3753454596059775 },
+    { name: "CITM2", code: "CITM2", img: "/images/citm2.jpg", lat: 6.517224457117517, lng: 3.3730816751719472 },
+    { name: "Rectors Office", code: "RECTOR", img: "/images/rector.jpg", lat: 6.516688816768297, lng: 3.374326220168855 },
+    { name: "School of Environmental Studies", code: "ENV", img: "/images/environmental.jpg", lat: 6.518226449484113, lng: 3.3759730965115398 },
+  ];
 
 
 // default marker icon in Leaflet + Webpack
@@ -67,35 +92,26 @@ const HallSearch = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [areaName, setAreaName] = useState("");
+  const [sharedLocation, setSharedLocation] = useState(null);
+
 
   
- useEffect(() => {
-  if (selectedHall && mapRef.current && !currentLocation) {
-    console.log("🧭 Centering map on:", selectedHall.name);
-    setTimeout(() => {
-      mapRef.current.flyTo([selectedHall.lat, selectedHall.lng], 18, {
-        duration: 1.5,
-      });
-    }, 300);
-  }
-}, [selectedHall]);
+ 
 
 const mapRef = useRef(null);
+const markerRef = useRef(null);
+
+const params = useParams();
+  console.log("All URL Parameters:", params)
+const { coords, hallCode } = useParams();
 
 
-
-  const { hallCode } = useParams();
-
-  useEffect(() => {
-    if (hallCode) {
-      // fetch hall details or focus map here
-      highlightHall(hallCode);
-    }
-  }, [hallCode]);
-
- 
   
  const shareToChatAndExternal = async ({ lat, lng, areaName, hallName }) => {
+  if (lat == null || lng == null) {
+  alert("Location not ready yet. Please try again.");
+  return;
+}
   // Create an overlay container dynamically
   const overlay = document.createElement("div");
   overlay.style.position = "fixed";
@@ -148,9 +164,14 @@ const mapRef = useRef(null);
   externalButton.style.padding = "10px";
   externalButton.style.cursor = "pointer";
   externalButton.onclick = async () => {
-    try {
-      const url = `${window.location.origin}/location/${lat},${lng}`;
-      const text = `Check out this location: ${areaName || hallName}  on CampusNav+ 🚀 ${url}`;
+   try {
+      // Clemo FIX: If it's a hall, send the /hall/ link. If not, send the /location/ link.
+      const hall = halls.find(h => h.name === hallName || (h.lat === lat && h.lng === lng));
+      const url = hall 
+        ? `${window.location.origin}/hall/${hall.code}` 
+        : `${window.location.origin}/location/${lat},${lng}`;
+
+      const text = `Check out ${hallName || areaName} on CampusNav+ 🚀 ${url}`;
       if (navigator.share) {
         await navigator.share({ title: "CampusNav+ Location", text, url });
       } else {
@@ -201,7 +222,7 @@ useEffect(() => {
   
 
 async function shareLocation(location) {
-  const url = `${window.location.origin}/location/ yctcampusnav.netlify.app`;
+const url = `${window.location.origin}/location/${currentLocation.lat},${currentLocation.lng}`;
   const text = `Check out my location:${areaName}, ${currentLocation.lat}, ${currentLocation.lng} on CampusNav+ 🚀`;
 
   if (navigator.share) {
@@ -222,7 +243,7 @@ async function shareLocation(location) {
 }
 
 async function shareHall(hall) {
-  const url = `${window.location.origin}/hall/${selectedHall.lat},${selectedHall.lng}`;
+  const url = `${window.location.origin}/hall/${hall.code}`;
   const text = `Check out ${hall.name},  on CampusNav+ 🚀 yctcampusnav.netlify.app`;
 
   try {
@@ -285,38 +306,12 @@ async function logHallVisit(hallCode) {
       .insert({ hall_code: hallCode });
 
     if (error) console.error("Error saving visit:", error);
+     else fetchVisitCount(hallCode);
   } catch (err) {
     console.error("Log visit failed:", err);
   }
 }
 
-  // Halls data
-  const halls = [
-    { name: "YCT Microfinance Bank", code: "YCT-MFB", img: yctBank, lat: 6.517496274395178, lng: 3.373883655685138 },
-    { name: "Multi Purpose Hall", code: "MP-Theatre", img: mpHall, lat: 6.5230, lng: 3.3760 },
-    { name: "Multi Purpose Hall MPT", code: "MPT", img: mpHall, lat: 6.5185702176752125, lng: 3.3763834744954337 },
-    { name: "MPT-G Multipurpose Hall Gallery", code: "MPT-G", img: mpHall, lat: 6.5185702176752125, lng: 3.3763834744954337 },
-    { name: "Yusuf Grillo Art Gallery", code: "ART", img: "/images/grillo.jpg", lat: 6.517642107970536, lng: 3.373129954954516 },
-    { name: "Art Complex", code: "ART COMPLEX", img: "/images/art-complex.jpg", lat: 6.517357700896631, lng: 3.3730709463357673 },
-    { name: "Science Complex", code: "SCI", img: scienceComplex, lat: 6.51767, lng: 3.37258 },
-    { name: "Cinema Surulere", code: "Film House", img: "/images/cinema.jpg", lat: 6.5000, lng: 3.3500 },
-    { name: "Yaba College Of Technology", code: "YCT", img: "/images/yct.jpg", lat:6.519308385801105, lng: 3.37507094 },
-    { name: "Skill Acquisition Center", code: "SAC", img: "/images/sac.jpg", lat: 6.51891, lng: 3.37218 },
-    { name: "ETF Building", code: "ETF", img: "/images/ETF.jpg", lat: 6.51887, lng: 3.37236 },
-    { name: "College Mosque", code: "MOSQUE", img: "/images/mosque.jpg", lat: 6.519308385801105, lng: 3.3723145634086484 },
-    { name: "School of Management and Business Studies", code: "SMBS", img: smbs, lat: 6.518983272177685, lng: 3.373135319374084 },
-    { name: "New Building", code: "NB", img: "/images/new.jpg", lat: 6.518422855575325, lng: 3.3725659266369634 },
-    { name: "ZENITH BANK/CITM", code: "ZENITH-Citm", img: zenithBank, lat: 6.5176694912116035, lng: 3.374114325670222 },
-    { name: "Bursary/Registry", code: "BURSARY", img: bursary, lat: 6.516923326046316, lng: 3.3741760164623313 },
-    { name: "College Hall", code: "COLLEGE-HALL", img: collegeHall, lat: 6.516622194794321, lng: 3.3749243527859027 },
-    { name: "Civil Engineer", code: "CE", img: ce, lat: 6.517072559166145, lng: 3.374733915943704 },
-    { name: "Civil Engineer B", code: "C5", img: c5, lat: 6.517155170338396, lng: 3.375629773764753 },
-    { name: "Mechanical Engineer", code: "MLB", img: mechEng, lat: 6.517016596751415, lng: 3.375141611718553 },
-    { name: "Library", code: "LIBRARY", img: "/images/library.jpg", lat: 6.517656166833382, lng: 3.3753454596059775 },
-    { name: "CITM2", code: "CITM2", img: "/images/citm2.jpg", lat: 6.517224457117517, lng: 3.3730816751719472 },
-    { name: "Rectors Office", code: "RECTOR", img: "/images/rector.jpg", lat: 6.516688816768297, lng: 3.374326220168855 },
-    { name: "School of Environmental Studies", code: "ENV", img: "/images/environmental.jpg", lat: 6.518226449484113, lng: 3.3759730965115398 },
-  ];
 
   // Filtered halls for suggestions
   const filteredHalls = halls.filter(hall =>
@@ -330,7 +325,7 @@ async function logHallVisit(hallCode) {
     setShowSuggestions(false);
     logHallVisit(hall.code);
     fetchVisitCount(hall.code);
-     // ✅ Center map on hall if map already loaded
+     //  Center map on hall if map already loaded
   if (mapRef.current) {
     mapRef.current.flyTo([hall.lat, hall.lng], 17, { duration: 1.5 });
   }
@@ -345,6 +340,70 @@ const handleSearch = () => {
     fetchVisitCount(selectedHall.code);
   }
 };
+
+useEffect(() => {
+  if (!coords) return;
+
+  const [lat, lng] = coords.split(",").map(Number);
+  if (isNaN(lat) || isNaN(lng)) return;
+
+  setSharedLocation({ lat, lng });
+}, [coords]);
+
+
+useEffect(() => {
+  if (!mapRef.current || !sharedLocation) return;
+
+  mapRef.current.flyTo(
+    [sharedLocation.lat, sharedLocation.lng],
+    18,
+    { duration: 1.5 }
+  );
+}, [sharedLocation]);
+
+useEffect(() => {
+  // 1. If we have a hallCode (from /hall/:hallCode)
+  if (hallCode) {
+    const hall = halls.find(h => h.code.toLowerCase() === hallCode.toLowerCase());
+    if (hall) {
+      setSelectedHall(hall);
+      setSharedLocation({ lat: hall.lat, lng: hall.lng });
+      logHallVisit(hall.code);
+      fetchVisitCount(hall.code);
+    }
+  } 
+  // 2. If we ONLY have coords (from /location/:coords)
+  else if (coords) {
+    const [lat, lng] = coords.split(",").map(Number);
+    setSharedLocation({ lat, lng });
+
+    // Look for a hall that matches these coordinates exactly
+    const matchedHall = halls.find(h => 
+      h.lat.toFixed(4) === lat.toFixed(4) && 
+      h.lng.toFixed(4) === lng.toFixed(4)
+    );
+
+    if (matchedHall) {
+      setSelectedHall(matchedHall);
+      logHallVisit(matchedHall.code);
+      fetchVisitCount(matchedHall.code);
+    }
+  }
+}, [hallCode, coords]);
+
+
+useEffect(() => {
+  if (selectedHall?.code) {
+    fetchVisitCount(selectedHall.code);
+  }
+}, [selectedHall]);
+
+useEffect(() => {
+  if (markerRef.current) {
+    markerRef.current.openPopup();
+  }
+}, [selectedHall]);
+
 
   const [showButton, setShowButton] = useState(true);
   const handleLocateMe = () => {
@@ -405,7 +464,19 @@ const handleSearch = () => {
           <p>
             <strong>📍Your Location:</strong> {areaName} <br />
             <strong>Coordinates:</strong> Lat: {currentLocation.lat.toFixed(5)}, Lng:{" "}
-            {currentLocation.lng.toFixed(5)} <button onClick={() => shareToChatAndExternal({areaName })}>Share Location</button>
+            {currentLocation.lng.toFixed(5)} 
+            <button
+                      onClick={() =>
+                        shareToChatAndExternal({
+                          lat: currentLocation.lat,
+                          lng: currentLocation.lng,
+                          areaName
+                        })
+                      }
+                 >     
+  Share Location
+</button>
+
           </p>
         </div>
       )}
@@ -432,21 +503,45 @@ const handleSearch = () => {
       )}
 
       {/* Hall preview & map */}
-      {selectedHall && (
+      {(selectedHall || sharedLocation) &&(
         <div className="preview-image">
           <h4>visual Representation</h4>
-          <p className="visit"> {visitCount} people have inquired about this location.</p>
-          <img src={selectedHall.img} alt={selectedHall.name} loading="lazy"/>
+        {/* Show the count ONLY if it's greater than 0 or we have a hall */}
+  {selectedHall && (
+    <p className="visit">{visitCount} people have inquired about this location.</p>
+   )}
+        {hallCode && !selectedHall ? (
+    <div className="loading-state">Loading Hall Details...</div>
+  ) : (
+    <img
+      src={selectedHall?.img || "/image-not-available.jpg"}
+      alt={selectedHall?.name || "Shared location"}
+      loading="lazy"
+      key={selectedHall?.code} // This forces the image to refresh when the hall changes
+      onError={(e) => {
+        e.currentTarget.src = "/image-not-available.jpg";
+      }}
+    />
+  )}
 
-          {(currentLocation || selectedHall) && (
          <MapContainer
-  ref={mapRef}
-  center={[6.517496274395178, 3.373883655685138]}
-  zoom={15}
-  
-  whenCreated={(map) => { mapRef.current = map; }}
-  
->
+             ref={mapRef}
+             center={[6.517496274395178, 3.373883655685138]}
+             zoom={15}
+             whenCreated={(map) => { mapRef.current = map; }}
+      >
+
+        {sharedLocation && (
+             <Marker
+               position={[sharedLocation.lat, sharedLocation.lng]}
+               icon={highlightIcon}
+             >
+               <Popup>
+                 📍 Shared Location
+               </Popup>
+             </Marker>
+         )}
+
 
   {currentLocation && selectedHall && (
   <CompassDistance 
@@ -467,12 +562,31 @@ const handleSearch = () => {
  </Popup>
     </Marker>
   )}
-
-  <Marker position={[selectedHall.lat, selectedHall.lng]} icon={highlightIcon}>
-    <Popup>📍
- <button onClick={() => shareToChatAndExternal({ lat: selectedHall.lat, lng: selectedHall.lng, hallName: selectedHall.name })}>Share Hall</button>
-</Popup>
-  </Marker>
+<Marker
+  ref={markerRef}
+  position={[
+    (selectedHall || sharedLocation).lat,
+    (selectedHall || sharedLocation).lng
+  ]}
+  icon={highlightIcon}
+>
+  <Popup>
+    {selectedHall ? (
+      <div>
+        <strong>{selectedHall.name}</strong><br />
+        <button onClick={() => shareToChatAndExternal({ 
+          lat: selectedHall.lat, 
+          lng: selectedHall.lng, 
+          hallName: selectedHall.name 
+        })}>
+          Share Hall
+        </button>
+      </div>
+    ) : (
+      "📍 Shared Location"
+    )}
+  </Popup>
+</Marker>
 
   {halls.map((hall, idx) => (
     <Marker key={idx} position={[hall.lat, hall.lng]}>
@@ -497,8 +611,8 @@ const handleSearch = () => {
       color="pink"
     />
   )}
-</MapContainer>
-    )}
+        </MapContainer>
+
 
           {/* Show Directions button */}
           {currentLocation && (
