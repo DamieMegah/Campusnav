@@ -9,7 +9,7 @@ function Home() {
   return (
     <div>
       <Header />
-       {isImportant && <Alert />}
+      
       <div className="body-container">
        <main className="main-content">
         <h1 className="home-text">Search for Hall</h1>

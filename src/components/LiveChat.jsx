@@ -145,54 +145,64 @@ const setReplyTo = (val) =>
 
 
 
-  // Handles incoming shared locations from navigation state
- // Handles incoming shared locations from navigation state
-useEffect(() => {
-  // Check if a pending message exists in the navigation state
+ useEffect(() => {
   if (location.state?.pendingMessage) {
     const { pendingMessage } = location.state;
-    // Construct the message text
-    const text = pendingMessage.hallCode
-      ? `Location: ${pendingMessage.hallName} /hall/${pendingMessage.hallCode}`
-      : pendingMessage.text;
     
-    // Set the input state with the new text
+    // Format the text specifically so our render function recognizes it
+    let text = "";
+    if (pendingMessage.hallCode) {
+      text = `Campus Location: ${pendingMessage.hallName}: /hall/${pendingMessage.hallCode}`;
+    } else {
+      text = `Shared Location: ${pendingMessage.lat},${pendingMessage.lng}`;
+    }
+    
     setInput(text);
     
-    // Clear the navigation state after setting the input
+    // Clear the navigation state
     window.history.replaceState({}, document.title);
   }
-}, [location.state]); // Depend on location.state
+}, [location.state]);
   
   // ============================================================
   // Message Rendering Logic
   // ============================================================
 
   // Helper to render hall codes as clickable links
- // Helper to render hall codes as clickable links
+ 
 function renderMessageText(text) {
   if (typeof text !== 'string') return text;
+  
+  // Regex to find hall codes OR coordinate patterns (e.g., 6.517,-3.373)
   const hallRegex = /(?:\/hall\/)?([A-Z]{2,}\d{2,}|[A-Z]{2,}-[A-Z]{2,})/;
+  const coordRegex = /(-?\d+\.\d+),(-?\d+\.\d+)/;
 
   return text.split(/(\s+)/).map((word, i) => {
+    // Check for Hall Code
     if (hallRegex.test(word)) {
       const hallCode = word.match(hallRegex)[1];
       return (
-        <span
-          key={i}
-          className="hall-link"
-          onClick={() => {
-            navigate(`/hall/${hallCode}`);
-          }}
-        >
-          {word}
+        <span key={i} className="hall-link clickable-location" onClick={() => navigate(`/hall/${hallCode}`)}>
+           {word}
         </span>
       );
     }
+    
+    // Check for raw Coordinates
+    if (coordRegex.test(word)) {
+      const coords = word.match(coordRegex)[0];
+      return (
+        <span key={i} className="coord-link clickable-location" onClick={() => navigate(`/location/${coords}`)}>
+           View Location
+        </span>
+      );
+    }
+
     return word;
   });
 }
-  // Helper to render hashtags as clickable links
+
+// Helper to render hashtags as clickable links
   function renderWithHashtags(text) {
     if (typeof text !== 'string') return text; // Pass through if not a string
     const hashtagRegex = /(\#[a-zA-Z0-9_]+)/g;
@@ -265,6 +275,7 @@ function renderMessageText(text) {
         .from("messages")
         .select(`
           id, text, nickname, user_id, pinned, created_at, reply_to,
+          hall_code, hall_img, hall_name,
           message_media(*), message_likes ( user_id )
         `)
         .order("created_at", { ascending: true });
@@ -348,6 +359,7 @@ const sendMessage = async () => {
   // 1. Validation: Prevent empty sends
   if (!input.trim() && uploadFiles.length === 0) return;
   if (!userId) return;
+  const shared = location.state?.pendingMessage;
 
   // Store current state values to use during the async process
   const messageText = input;
@@ -361,6 +373,9 @@ const sendMessage = async () => {
     text: messageText,
     nickname: nickname || "Anonymous",
     user_id: userId,
+    hall_code: shared?.hallCode || null,
+    hall_img: shared?.hallImg || null, 
+    hall_name: shared?.hallName || null,
     created_at: null, // This 'null' triggers the 'pending clock' icon
     status: "sending",
     pinned: false,
@@ -389,6 +404,8 @@ const sendMessage = async () => {
           text: messageText || null,
           nickname: nickname || "",
           user_id: userId,
+          hall_code: location.state?.pendingMessage?.hallCode || null, 
+          hall_img: location.state?.pendingMessage?.hallImg || null,
           pinned: false,
           reply_to: currentReply ? currentReply.id : null,
         },
@@ -453,7 +470,7 @@ const sendMessage = async () => {
 
   }catch (e) {
     console.error("sendMessage error:", e);
-    // ✅ FIX: Instead of deleting, mark as failed
+    //  FIX: Instead of deleting, mark as failed
     setMessages((prev) =>
       prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m))
     ); alert("Connection error: Message not sent");
@@ -614,8 +631,22 @@ const deleteMessage = async (msg) => {
 
                 {m.text && (
                 <div className="lc-bubble-message">
-                     {renderMessageContent(m.text)}
-                   
+                          {m.hall_img && (
+                 <div className="chat-hall-card" onClick={() => navigate(`/hall/${m.hall_code}`)}>
+                    <img 
+                      src={m.hall_img} 
+                      alt={m.hall_name} 
+                      className="chat-hall-img" 
+                      onError={(e) => console.log("Image failed to load:", m.hall_img)}
+                    />
+                    <div className="chat-hall-info">
+                      <strong>{m.hall_name}</strong>
+                      <span>View on Map</span>
+                    </div>
+                 </div>
+               )}
+  
+            {renderMessageContent(m.text)}
               </div>
                 )}
             </div>

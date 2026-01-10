@@ -141,23 +141,25 @@ const { coords, hallCode } = useParams();
   chatButton.textContent = "📩 Share to Pins";
   chatButton.style.padding = "10px";
   chatButton.style.cursor = "pointer";
+   chatButton.style.borderRadius = "pointer";
   chatButton.onclick = () => {
+    const imageToShare = selectedHall?.img || "";
+    console.log("Sharing Image URL:", imageToShare);
     const pendingMessage = {
     type: "location",
     lat,
     lng,
     areaName: areaName || "",
     hallName: hallName || "",
-    text: hallName
-     ? `SHARED AN ON CAMPUS LOCATION: #${hallName.replace(/\s/g, "_")}`
-    : `SHARED A LOCATION #${areaName.replace(/\s/g, "_")}`
+    hallImg: imageToShare,
+    // Use the code from the hall currently selected
+    hallCode: selectedHall ? selectedHall.code : null, 
+    text: hallName ? ` ${hallName}` : ` Shared Location`
   };
 
-  // 👇 Pass the message along with navigation
   navigate("/chat", { state: { pendingMessage } });
-    document.body.removeChild(overlay); // remove overlay after action
-  };
-
+  document.body.removeChild(overlay);
+};
   // Create Share Externally button
   const externalButton = document.createElement("button");
   externalButton.textContent = "🌍 Share Externally";
@@ -171,7 +173,7 @@ const { coords, hallCode } = useParams();
         ? `${window.location.origin}/hall/${hall.code}` 
         : `${window.location.origin}/location/${lat},${lng}`;
 
-      const text = `Check out ${hallName || areaName} on CampusNav+ 🚀 ${url}`;
+      const text = `Location ${hallName || areaName} on CampusNav+  ${url}`;
       if (navigator.share) {
         await navigator.share({ title: "CampusNav+ Location", text, url });
       } else {
@@ -219,11 +221,33 @@ useEffect(() => {
     );
   }
 }, [currentLocation]);
+
+
+  useEffect(() => {
+  // If a hall or shared location is set, fly the map there
+  const target = selectedHall || sharedLocation;
+  
+  if (mapRef.current && target) {
+    mapRef.current.flyTo(
+      [target.lat, target.lng], 
+      18, 
+      { duration: 2.0, animate: true }
+    );
+    
+    // Automatically open the popup after flying
+    if (markerRef.current) {
+      setTimeout(() => {
+        markerRef.current.openPopup();
+      }, 2100); // Wait for flight to finish
+    }
+  }
+}, [selectedHall, sharedLocation]);
+
   
 
 async function shareLocation(location) {
 const url = `${window.location.origin}/location/${currentLocation.lat},${currentLocation.lng}`;
-  const text = `Check out my location:${areaName}, ${currentLocation.lat}, ${currentLocation.lng} on CampusNav+ 🚀`;
+  const text = `Check out my location:${areaName}, ${currentLocation.lat}, ${currentLocation.lng} on CampusNav+ `;
 
   if (navigator.share) {
     try {
@@ -244,7 +268,7 @@ const url = `${window.location.origin}/location/${currentLocation.lat},${current
 
 async function shareHall(hall) {
   const url = `${window.location.origin}/hall/${hall.code}`;
-  const text = `Check out ${hall.name},  on CampusNav+ 🚀 yctcampusnav.netlify.app`;
+  const text = `Check out ${hall.name},  on CampusNav+  yctcampusnav.netlify.app`;
 
   try {
     // 1️⃣ Fetch hall image & convert to File
@@ -462,7 +486,7 @@ useEffect(() => {
       {currentLocation && (
         <div className="current-location">
           <p>
-            <strong>📍Your Location:</strong> {areaName} <br />
+            <strong>Your Location:</strong> {areaName} <br />
             <strong>Coordinates:</strong> Lat: {currentLocation.lat.toFixed(5)}, Lng:{" "}
             {currentLocation.lng.toFixed(5)} 
             <button
@@ -473,6 +497,7 @@ useEffect(() => {
                           areaName
                         })
                       }
+                    style={{borderRadius :"250px"}}
                  >     
   Share Location
 </button>
@@ -537,7 +562,7 @@ useEffect(() => {
                icon={highlightIcon}
              >
                <Popup>
-                 📍 Shared Location
+                  Shared Location
                </Popup>
              </Marker>
          )}
@@ -557,7 +582,7 @@ useEffect(() => {
 
   {currentLocation && (
     <Marker position={[currentLocation.lat, currentLocation.lng]}icon={currentLocationIcon}>
-      <Popup>📍 You are at {areaName}
+      <Popup> You are at {areaName}
         <button onClick={() => shareToChatAndExternal({ lat: currentLocation.lat, lng: currentLocation.lng, areaName })}>Share Location</button>
  </Popup>
     </Marker>
@@ -583,7 +608,7 @@ useEffect(() => {
         </button>
       </div>
     ) : (
-      "📍 Shared Location"
+      " Shared Location" 
     )}
   </Popup>
 </Marker>
