@@ -6,7 +6,6 @@ import Footer from './components/Footer';
 import CgpaPage from './pages/CgpaPage';
 import About from './pages/About';
 import HallSearch from './components/HallSearch';
-import HallPage from './pages/HallPage';
 import Alert from './components/Alert';
 import Chat from './pages/Chat';
 import './index.css';
@@ -30,7 +29,7 @@ function App() {
     
      
        <div className="App">
-        
+        <Alert />
          <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<HallSearch />} />

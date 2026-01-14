@@ -31,7 +31,8 @@ import scienceComplex from '../assets/scienceComp.jpg';
     { name: "Yusuf Grillo Art Gallery", code: "ART", img: "/images/grillo.jpg", lat: 6.517642107970536, lng: 3.373129954954516 },
     { name: "Art Complex", code: "ART COMPLEX", img: "/images/art-complex.jpg", lat: 6.517357700896631, lng: 3.3730709463357673 },
     { name: "Science Complex", code: "SCI", img: scienceComplex, lat: 6.51767, lng: 3.37258 },
-    { name: "Cinema Surulere", code: "Film House", img: "/images/cinema.jpg", lat: 6.5000, lng: 3.3500 },
+    { name: "Test", code: "Film House", img: "/images/cinema.jpg", lat: 6.49175, lng: 3.35699 },
+     { name: "Cinema", code: "Film House", img: "/images/cinema.jpg", lat: 6.49171, lng: 3.35681 },
     { name: "Yaba College Of Technology", code: "YCT", img: "/images/yct.jpg", lat:6.519308385801105, lng: 3.37507094 },
     { name: "Skill Acquisition Center", code: "SAC", img: "/images/sac.jpg", lat: 6.51891, lng: 3.37218 },
     { name: "ETF Building", code: "ETF", img: "/images/ETF.jpg", lat: 6.51887, lng: 3.37236 },
@@ -80,6 +81,24 @@ const currentLocationIcon = L.divIcon({
   iconAnchor: [10, 10], 
 });
 
+//CALCULATING DISTANCE LOGIC FOR GEOFENCING -> BY AI
+function getDistanceInMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000; // Earth radius in meters
+  const toRad = (deg) => (deg * Math.PI) / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 
 
 
@@ -93,6 +112,28 @@ const HallSearch = () => {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [areaName, setAreaName] = useState("");
   const [sharedLocation, setSharedLocation] = useState(null);
+  const [isNearby, setIsNearby] = useState(false);
+
+  //PROXIMITY CHECKER LOGIC
+  const PROXIMITY_RADIUS = 80; // meters
+
+  useEffect(() => {
+  if (!currentLocation) return;
+
+  const target = selectedHall || sharedLocation;
+  if (!target) return;
+
+  const distance = getDistanceInMeters(
+    currentLocation.lat,
+    currentLocation.lng,
+    target.lat,
+    target.lng
+  );
+
+  setIsNearby(distance <= PROXIMITY_RADIUS);
+}, [currentLocation, selectedHall, sharedLocation]);
+
+
 
 
   
@@ -106,90 +147,131 @@ const params = useParams();
 const { coords, hallCode } = useParams();
 
 
-  
- const shareToChatAndExternal = async ({ lat, lng, areaName, hallName }) => {
+  const shareToChatAndExternal = async ({ lat, lng, areaName, hallName }) => {
   if (lat == null || lng == null) {
-  alert("Location not ready yet. Please try again.");
-  return;
-}
-  // Create an overlay container dynamically
+    alert("Location not ready yet. Please try again.");
+    return;
+  }
+
+  // Find hall if any
+  const hall = halls.find(
+    h => h.name === hallName || (h.lat === lat && h.lng === lng)
+  );
+
+  const url = hall
+    ? `${window.location.origin}/hall/${hall.code}`
+    : `${window.location.origin}/location/${lat},${lng}`;
+
+  const text = hall
+    ? `Check out ${hall.name} on CampusNav+:`
+    : `My location on CampusNav+:`;
+
+  // Create overlay
   const overlay = document.createElement("div");
-  overlay.style.position = "fixed";
-  overlay.style.top = 0;
-  overlay.style.left = 0;
-  overlay.style.width = "100vw";
-  overlay.style.height = "100vh";
-  overlay.style.background = "rgba(0,0,0,0.5)";
-  overlay.style.display = "flex";
-  overlay.style.alignItems = "center";
-  overlay.style.justifyContent = "center";
-  overlay.style.zIndex = 9999;
+  Object.assign(overlay.style, {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    background: "rgba(0,0,0,0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+  });
 
-  // Create the button container
+  // Button container
   const buttonContainer = document.createElement("div");
-  buttonContainer.style.background = "#fff";
-  buttonContainer.style.padding = "20px";
-  buttonContainer.style.borderRadius = "12px";
-  buttonContainer.style.display = "flex";
-  buttonContainer.style.flexDirection = "column";
-  buttonContainer.style.gap = "10px";
-  buttonContainer.style.minWidth = "200px";
-  buttonContainer.style.textAlign = "center";
+  Object.assign(buttonContainer.style, {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "12px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    minWidth: "220px",
+    textAlign: "center",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+  });
 
-  // Create Share to Chat button
+  // Share to Pins button
   const chatButton = document.createElement("button");
   chatButton.textContent = "📩 Share to Pins";
-  chatButton.style.padding = "10px";
-  chatButton.style.cursor = "pointer";
-   chatButton.style.borderRadius = "pointer";
+  Object.assign(chatButton.style, {
+    padding: "12px 16px",
+    cursor: "pointer",
+    borderRadius: "12px",
+    fontWeight: "bold",
+    fontSize: "0.9rem",
+    backgroundColor: "#007bff",
+    color: "#fff",
+    border: "none",
+  });
+  chatButton.onmouseover = () => (chatButton.style.backgroundColor = "#0056b3");
+  chatButton.onmouseout = () => (chatButton.style.backgroundColor = "#007bff");
   chatButton.onclick = () => {
     const imageToShare = selectedHall?.img || "";
-    console.log("Sharing Image URL:", imageToShare);
     const pendingMessage = {
-    type: "location",
-    lat,
-    lng,
-    areaName: areaName || "",
-    hallName: hallName || "",
-    hallImg: imageToShare,
-    // Use the code from the hall currently selected
-    hallCode: selectedHall ? selectedHall.code : null, 
-    text: hallName ? ` ${hallName}` : ` Shared Location`
+      type: "location",
+      lat,
+      lng,
+      areaName: areaName || "",
+      hallName: hallName || "",
+      hallImg: imageToShare,
+      hallCode: selectedHall ? selectedHall.code : null,
+      text: hallName ? ` ${hallName}` : " Shared Location",
+    };
+
+    navigate("/chat", { state: { pendingMessage } });
+    document.body.removeChild(overlay);
   };
 
-  navigate("/chat", { state: { pendingMessage } });
-  document.body.removeChild(overlay);
-};
-  // Create Share Externally button
+  // Share externally button
   const externalButton = document.createElement("button");
-  externalButton.textContent = "🌍 Share Externally";
-  externalButton.style.padding = "10px";
-  externalButton.style.cursor = "pointer";
+  externalButton.textContent = "Share Externally";
+  Object.assign(externalButton.style, {
+    padding: "12px 16px",
+    cursor: "pointer",
+    borderRadius: "12px",
+    fontWeight: "bold",
+    fontSize: "0.9rem",
+    backgroundColor: "#25d366",
+    color: "#fff",
+    border: "none",
+  });
+  externalButton.onmouseover = () =>
+    (externalButton.style.backgroundColor = "#1da851");
+  externalButton.onmouseout = () =>
+    (externalButton.style.backgroundColor = "#25d366");
   externalButton.onclick = async () => {
-   try {
-      // Clemo FIX: If it's a hall, send the /hall/ link. If not, send the /location/ link.
-      const hall = halls.find(h => h.name === hallName || (h.lat === lat && h.lng === lng));
-      const url = hall 
-        ? `${window.location.origin}/hall/${hall.code}` 
-        : `${window.location.origin}/location/${lat},${lng}`;
+    try {
+       // Determine URL
+       const hall = halls.find(h => h.name === hallName || (h.lat === lat && h.lng === lng));
+       const url = hall 
+       ? `${window.location.origin}/hall/${hall.code}` 
+       : `${window.location.origin}/location/${lat},${lng}`;
 
-      const text = `Location ${hallName || areaName} on CampusNav+  ${url}`;
-      if (navigator.share) {
-        await navigator.share({ title: "CampusNav+ Location", text, url });
-      } else {
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-      }
-    } catch (err) {
-      console.warn("share failed", err);
+     if (navigator.share) {
+      await navigator.share({ title: "CampusNav+ Location", url });
+    } else if (navigator.clipboard) {
+      // Copy only the link
+      await navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard!");
+    } else {
+      // WhatsApp fallback (just the URL)
+      window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, "_blank");
     }
-    document.body.removeChild(overlay); // remove overlay after action
+  } catch (err) {
+    console.warn("Share failed", err);
+    alert("Could not share, please try again!");
+  }
+  document.body.removeChild(overlay);
   };
 
-  // Append buttons to container
+  // Append buttons & overlay
   buttonContainer.appendChild(chatButton);
   buttonContainer.appendChild(externalButton);
-
-  // Append everything to overlay and to body
   overlay.appendChild(buttonContainer);
   document.body.appendChild(overlay);
 };
@@ -386,35 +468,35 @@ useEffect(() => {
 }, [sharedLocation]);
 
 useEffect(() => {
-  // 1. If we have a hallCode (from /hall/:hallCode)
-  if (hallCode) {
-    const hall = halls.find(h => h.code.toLowerCase() === hallCode.toLowerCase());
-    if (hall) {
-      setSelectedHall(hall);
-      setSharedLocation({ lat: hall.lat, lng: hall.lng });
-      logHallVisit(hall.code);
-      fetchVisitCount(hall.code);
-    }
-  } 
-  // 2. If we ONLY have coords (from /location/:coords)
-  else if (coords) {
-    const [lat, lng] = coords.split(",").map(Number);
-    setSharedLocation({ lat, lng });
+  if (!mapRef.current) return;
 
-    // Look for a hall that matches these coordinates exactly
-    const matchedHall = halls.find(h => 
-      h.lat.toFixed(4) === lat.toFixed(4) && 
-      h.lng.toFixed(4) === lng.toFixed(4)
-    );
-
-    if (matchedHall) {
-      setSelectedHall(matchedHall);
-      logHallVisit(matchedHall.code);
-      fetchVisitCount(matchedHall.code);
+  try {
+    if (hallCode) {
+      const hall = halls.find(h => h.code.toLowerCase() === hallCode.toLowerCase());
+      if (hall) {
+        setSelectedHall(hall);
+        setSharedLocation({ lat: hall.lat, lng: hall.lng });
+        logHallVisit(hall.code);
+        fetchVisitCount(hall.code);
+      }
+    } else if (coords) {
+      const [lat, lng] = coords.split(",").map(Number);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setSharedLocation({ lat, lng });
+        const matchedHall = halls.find(
+          h => Math.abs(h.lat - lat) < 0.0001 && Math.abs(h.lng - lng) < 0.0001
+        );
+        if (matchedHall) {
+          setSelectedHall(matchedHall);
+          logHallVisit(matchedHall.code);
+          fetchVisitCount(matchedHall.code);
+        }
+      }
     }
+  } catch (err) {
+    console.error("Error parsing URL params", err);
   }
 }, [hallCode, coords]);
-
 
 useEffect(() => {
   if (selectedHall?.code) {
@@ -430,20 +512,43 @@ useEffect(() => {
 
 
   const [showButton, setShowButton] = useState(true);
-  const handleLocateMe = () => {
-    if (navigator.geolocation) {
-       setShowButton(false);
-      navigator.geolocation.getCurrentPosition(
-        pos => setCurrentLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        err => {
-          console.error(err);
-          alert("Could not get your location.");
-        }
-      );
-    } else {
-      alert("Geolocation not supported.");
+  const watchIdRef = useRef(null);
+
+const handleLocateMe = () => {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
+
+  setShowButton(false);
+
+  watchIdRef.current = navigator.geolocation.watchPosition(
+    (pos) => {
+      setCurrentLocation({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      });
+    },
+    (err) => {
+      console.error(err);
+      alert("Live tracking failed");
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 2000,
+      timeout: 10000,
+    }
+  );
+};
+
+useEffect(() => {
+  return () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
     }
   };
+}, []);
+
 
   const getDirectionsUrl = () => {
     if (currentLocation && selectedHall) {
@@ -457,8 +562,27 @@ useEffect(() => {
   setOpenMenu(false);
   setSelectedHall(null);
   setCurrentLocation(null);
-  // etc...
 };
+
+useEffect(() => {
+  if (!currentLocation || !selectedHall) return;
+
+  const distance =
+    getDistanceInMeters(
+      currentLocation.lat,
+      currentLocation.lng,
+      selectedHall.lat,
+      selectedHall.lng
+    );
+
+  if (distance <= 15) {
+    supabase.from("hall_visits").insert({
+      hall_code: selectedHall.code,
+      arrived: true,
+    });
+  }
+}, [currentLocation]);
+
 
   return (
     <div className="input-container">
@@ -552,7 +676,7 @@ useEffect(() => {
          <MapContainer
              ref={mapRef}
              center={[6.517496274395178, 3.373883655685138]}
-             zoom={15}
+             zoom={17}
              whenCreated={(map) => { mapRef.current = map; }}
       >
 
@@ -587,31 +711,38 @@ useEffect(() => {
  </Popup>
     </Marker>
   )}
-<Marker
-  ref={markerRef}
-  position={[
-    (selectedHall || sharedLocation).lat,
-    (selectedHall || sharedLocation).lng
-  ]}
-  icon={highlightIcon}
->
-  <Popup>
-    {selectedHall ? (
-      <div>
-        <strong>{selectedHall.name}</strong><br />
-        <button onClick={() => shareToChatAndExternal({ 
-          lat: selectedHall.lat, 
-          lng: selectedHall.lng, 
-          hallName: selectedHall.name 
-        })}>
-          Share Hall
-        </button>
-      </div>
-    ) : (
-      " Shared Location" 
-    )}
-  </Popup>
-</Marker>
+
+{(selectedHall || sharedLocation) && (
+  <Marker
+    ref={markerRef}
+    position={[
+      (selectedHall || sharedLocation).lat,
+      (selectedHall || sharedLocation).lng,
+    ]}
+    icon={highlightIcon}
+  >
+    <Popup>
+      {selectedHall ? (
+        <div>
+          <strong>{selectedHall.name}</strong>
+          <br />
+          <button onClick={() =>
+            shareToChatAndExternal({
+              lat: selectedHall.lat,
+              lng: selectedHall.lng,
+              hallName: selectedHall.name
+            })
+          }>
+            Share Hall
+          </button>
+        </div>
+      ) : (
+        "Shared Location"
+      )}
+    </Popup>
+  </Marker>
+)}
+
 
   {halls.map((hall, idx) => (
     <Marker key={idx} position={[hall.lat, hall.lng]}>
@@ -627,15 +758,16 @@ useEffect(() => {
   />
 )}
 
-  {currentLocation && (
-    <Polyline
-      positions={[
-        [currentLocation.lat, currentLocation.lng],
-        [selectedHall.lat, selectedHall.lng],
-      ]}
-      color="pink"
-    />
-  )}
+  {currentLocation && selectedHall && (
+  <Polyline
+    positions={[
+      [currentLocation.lat, currentLocation.lng],
+      [selectedHall.lat, selectedHall.lng],
+    ]}
+    color="pink"
+  />
+)}
+
         </MapContainer>
 
 

@@ -110,8 +110,12 @@
     line-height: 1.4;
     font-size: 0.8rem;
     margin: 0.6rem 0;
-    overflow-wrap: normal;
+
+   white-space: normal;
+overflow-wrap: anywhere;
+word-break: break-word;
 }
+
 
 .lc-failed-alert {
   font-size: 10px;
@@ -160,8 +164,12 @@
 /* Container for the tick inside text bubbles */
 .lc-bubble-message {
   position: relative;
-  padding-right: 25px; /* Space for the tick */
-  display: block;
+  padding: 0 10px; 
+   border: 1px solid rgba(255, 255, 255, 0.041);
+   border-radius: var(--lc-radius);
+   white-space: normal;         /* wrap lines at spaces */
+    overflow-wrap: break-word;
+    word-break: normal;
 }
 
 /* The Tick Style */
@@ -230,13 +238,6 @@
   
 }
 
-
-.lc-bubble-message {
-    max-width: 100%;
-    overflow-wrap: normal;
-    word-break: keep-all; /* Add this to handle non-whitespace characters */
-    overflow: hidden;
-}
 
 .lc-bubble-header {
   display: flex;
@@ -658,7 +659,8 @@ padding:0.5rem;
   .lc-bubble{
   font-size:1.5rem;
   margin:0.5rem 0; 
-   overflow-wrap:wrap;
+ white-space: normal;
+overflow-x: wrap;
  }
 
   .lc-inputs {
@@ -725,21 +727,52 @@ padding:0.5rem;
 }
 
 .lc-bubble-message{
-  max-width:99%;
-   word-wrap: break-word;
-   overflow-wrap:wrap;
+  max-width:auto;
+  width: 25rem;
+   white-space: normal;       /* allow lines to wrap naturally */
+  overflow-x: hidden; 
+
 }
 
-
 }
 
-/* Optional: nicer scrollbars for WebKit (stage may not scroll, but future-proofing) */
+/* Base scrollbar */
+/* Default thin scrollbar */
 .lc-stage::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 2px;      /* thin normally */
+  height: 12px;
+  transition: width 0.2s ease, background 0.2s ease;
 }
 
+/* Scrollbar thumb */
 .lc-stage::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.3); /* dim initially */
+  border-radius: 8px;
+  border: 2px solid rgba(0,0,0,0.1);
+  transition: background 0.2s ease, width 0.2s ease;
+}
+
+/* Scrollbar track */
+.lc-stage::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  transition: background 0.2s ease, width 0.2s ease;
+}
+
+/* Bright thumb while scrolling (without hover) */
+.lc-stage:active::-webkit-scrollbar-thumb,
+.lc-stage:focus::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Hovering on the scrollbar thumb */
+.lc-stage::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.7); /* keep bright */
+  width: 12px; /* widen when hovered */
+}
+
+/* Hovering on the scrollbar track */
+.lc-stage::-webkit-scrollbar-track:hover {
+  background: rgba(0, 0, 0, 0.2); /* slightly brighter track */
+  width: 12px; /* widen when hovered */
 }

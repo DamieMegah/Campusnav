@@ -9,15 +9,18 @@ function Alert() {
   const [checked, setChecked] = useState(false);
   const [visible, setVisible] = useState(true);
   const navigate = useNavigate();
+  const [highlight, setHighlight] = useState(false);
 
   const handleContinue = () => {
     if (checked) {
       setVisible(false);
-      document.querySelector('.checker').classList.remove('highlight');
+     setHighlight(false);
+
       
     } else {
       alert("Please read and accept the disclaimer before proceeding.");
-      document.querySelector('.checker').classList.add('highlight'); // Highlight the checkbox if not checked
+      setHighlight(false);
+
     }
   };
 
@@ -37,11 +40,13 @@ All payments must only be made directly on the official school website or throug
         </p>
 
         <label className="alert-checkbox">
-          <input
-            type="checkbox" className="checker"
-            checked={checked}
-            onChange={(e) => setChecked(e.target.checked)}
-          />
+         <input
+  type="checkbox"
+  className={`checker ${highlight ? 'highlight' : ''}`}
+  checked={checked}
+  onChange={(e) => setChecked(e.target.checked)}
+/>
+
           &nbsp; I have read and understood the disclaimer
         </label>
 
