@@ -95,10 +95,11 @@ This project is under active development and can be extended with more advanced 
 
 ## Author
 
-Atöyebi Damilare
+Atöyebi Damilare (DamieMegah)
 
 ---
 
 ## License
 
 This project is open-source and available for educational and development purposes.
+
