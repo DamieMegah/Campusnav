@@ -66,7 +66,7 @@ useEffect(() => {
   );
   setBearing(brng);
 
-  // ✅ ARRIVAL CHECK (THIS IS WHERE IT GOES)
+  // ARRIVAL CHECK 
   const arrived = dist * 1000 <= ARRIVAL_DISTANCE;
 
   if (arrived && !hasArrived) {
@@ -121,8 +121,9 @@ useEffect(() => {
          </div>
 
        {distance * 1000 <= 15 && (
-          <div style={{ color: "green", marginTop: "4px", fontSize: "0.75rem" }}>
-            You have arrived at this location, Look around for the building in the picture
+          <div style={{ color: "green", marginTop: "3px", fontSize: "0.845rem" }}>
+            You have arrived, Look around for the building
+            
           </div>
          )}
 

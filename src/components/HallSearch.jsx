@@ -81,6 +81,14 @@ const currentLocationIcon = L.divIcon({
   iconAnchor: [10, 10], 
 });
 
+const smallHallIcon = L.divIcon({
+  className: "small-hall-marker",
+  html: '<div class="smallDot"></div>',
+  iconSize: [8, 8],
+  iconAnchor: [4, 4],
+});
+
+
 //CALCULATING DISTANCE LOGIC FOR GEOFENCING -> BY AI
 function getDistanceInMeters(lat1, lng1, lat2, lng2) {
   const R = 6371000; // Earth radius in meters
@@ -113,6 +121,8 @@ const HallSearch = () => {
   const [areaName, setAreaName] = useState("");
   const [sharedLocation, setSharedLocation] = useState(null);
   const [isNearby, setIsNearby] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+
 
   //PROXIMITY CHECKER LOGIC
   const PROXIMITY_RADIUS = 80; // meters
@@ -306,7 +316,7 @@ useEffect(() => {
 
 
   useEffect(() => {
-  // If a hall or shared location is set, fly the map there
+  //  fly the map there location/hall
   const target = selectedHall || sharedLocation;
   
   if (mapRef.current && target) {
@@ -353,12 +363,12 @@ async function shareHall(hall) {
   const text = `Check out ${hall.name},  on CampusNav+  yctcampusnav.netlify.app`;
 
   try {
-    // 1️⃣ Fetch hall image & convert to File
+    //  Fetch hall image & convert to File
     const response = await fetch(hall.img);
     const blob = await response.blob();
     const file = new File([blob], `${hall.code}.jpg`, { type: blob.type });
 
-    // 2️⃣ Try Web Share API with image
+    // Try Web Share API with image
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         title: "CampusNav+ Hall",
@@ -370,14 +380,14 @@ async function shareHall(hall) {
       return;
     }
 
-    // 3️⃣ If navigator.share exists but doesn’t support files, share text only
+    // If navigator.share exists but doesn’t support files, share text only
     if (navigator.share) {
       await navigator.share({ title: "CampusNav+ Hall", text, url });
       console.log("Hall shared without image (fallback)");
       return;
     }
 
-    // 4️⃣ WhatsApp fallback (open with image + caption)
+    //  WhatsApp fallback (open with image + caption)
     const waText = encodeURIComponent(`${text} \n${url}`);
     const waImage = encodeURIComponent(hall.img);
     window.open(
@@ -520,26 +530,63 @@ const handleLocateMe = () => {
     return;
   }
 
+  // Clear previous watcher
+  if (watchIdRef.current !== null) {
+    navigator.geolocation.clearWatch(watchIdRef.current);
+    watchIdRef.current = null;
+  }
+
+  setIsLocating(true);
   setShowButton(false);
 
-  watchIdRef.current = navigator.geolocation.watchPosition(
+  navigator.geolocation.getCurrentPosition(
     (pos) => {
-      setCurrentLocation({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-      });
+      setTimeout(() => {
+        setCurrentLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+
+        setIsLocating(false);
+
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          (pos) => {
+            setCurrentLocation({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+            });
+          },
+          (err) => {
+            console.warn("Live tracking error:", err.code, err.message);
+          },
+          {
+            enableHighAccuracy: true,
+            maximumAge: 5000,
+          }
+        );
+      }, 1000);
     },
     (err) => {
-      console.error(err);
-      alert("Live tracking failed");
+      console.error("Initial location failed:", err.code, err.message);
+      setIsLocating(false);
+      setShowButton(true);
+
+      if (err.code === 1) {
+        alert("Location permission denied");
+      } else if (err.code === 2) {
+        alert("Location unavailable. Turn on Wi-Fi or GPS.");
+      } else if (err.code === 3) {
+        alert("Location timed out. Move to open area.");
+      }
     },
     {
       enableHighAccuracy: true,
-      maximumAge: 2000,
-      timeout: 10000,
+      timeout: 20000,
+      maximumAge: 0,
     }
   );
 };
+
 
 useEffect(() => {
   return () => {
@@ -601,11 +648,19 @@ useEffect(() => {
         />
         <button className="search-button" onClick={handleSearch}>Search</button>
       </div>
-      {showButton && (
-        <button className="locate-button" onClick={handleLocateMe}>
-          <i className="fas fa-map-marker-alt"></i> My Location
-        </button>
-      )}
+    {isLocating && (
+  <div className="location-loader">
+    <div className="spinner"></div>
+    <p>Fetching your location…</p>
+  </div>
+)}
+
+{showButton && !isLocating && (
+  <button className="locate-button" onClick={handleLocateMe}>
+    <i className="fas fa-map-marker-alt"></i> My Location
+  </button>
+)}
+
 
       {currentLocation && (
         <div className="current-location">
@@ -705,7 +760,7 @@ useEffect(() => {
 
 
   {currentLocation && (
-    <Marker position={[currentLocation.lat, currentLocation.lng]}icon={currentLocationIcon}>
+    <Marker key="user-location"  position={[currentLocation.lat, currentLocation.lng]}icon={currentLocationIcon}>
       <Popup> You are at {areaName}
         <button onClick={() => shareToChatAndExternal({ lat: currentLocation.lat, lng: currentLocation.lng, areaName })}>Share Location</button>
  </Popup>
@@ -744,11 +799,20 @@ useEffect(() => {
 )}
 
 
-  {halls.map((hall, idx) => (
-    <Marker key={idx} position={[hall.lat, hall.lng]}>
-      <Popup> {hall.name}</Popup>
+ {halls.map((hall) => {
+  const isSelected = selectedHall?.code === hall.code;
+
+  return (
+    <Marker
+      key={hall.code}
+      position={[hall.lat, hall.lng]}
+      icon={isSelected ? highlightIcon : smallHallIcon}
+    >
+      <Popup>{hall.name}</Popup>
     </Marker>
-  ))}
+  );
+})}
+
 
 {currentLocation && selectedHall && mapRef.current && (
   <RoutingMachine 
