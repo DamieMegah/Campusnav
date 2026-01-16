@@ -314,42 +314,63 @@ useEffect(() => {
     .channel("realtime-messages")
     .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => fetchMessages())
     .subscribe();
+const likesChannel = supabase
+  .channel("realtime-message-likes")
+  .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_likes" }, (payload) => {
+    const { message_id, user_id } = payload.new;
 
-  const likesChannel = supabase
-    .channel("realtime-message-likes")
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_likes" }, (payload) => {
-      const { message_id, user_id } = payload.new;
+    if (user_id !== userId) {
+      const id = Date.now();
+      setFloatingHearts((prev) => [...prev, { id, messageId: message_id }]);
+      setTimeout(() => setFloatingHearts((prev) => prev.filter((h) => h.id !== id)), 2000);
+    }
 
-      // Floating heart animation for other users
-      if (user_id !== userId) {
-        const id = Date.now();
-        setFloatingHearts((prev) => [...prev, { id, messageId: message_id }]);
-        setTimeout(() => setFloatingHearts((prev) => prev.filter((h) => h.id !== id)), 2000);
-      }
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === message_id 
+          ? { 
+              ...m, 
+              likes_count: (m.likes_count || 0) + 1,
+              // Add the user to the array so the heart turns red
+              message_likes: [...(m.message_likes || []), { user_id }] 
+            } 
+          : m
+      )
+    );
+  })
+  .on("postgres_changes", { event: "DELETE", schema: "public", table: "message_likes" }, (payload) => {
+    // IMPORTANT: Supabase DELETE payloads usually send the deleted row ID 
+    // but not always the user_id unless "Full" replica identity is enabled.
+    // However, since we know WHICH message was affected:
+    const { message_id } = payload.old;
 
-      // ✅ Update likes locally (no refetch)
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === message_id ? { ...m, likes_count: (m.likes_count || 0) + 1 } : m
-        )
-      );
-    })
-    .on("postgres_changes", { event: "DELETE", schema: "public", table: "message_likes" }, (payload) => {
-      const { message_id } = payload.old;
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === message_id 
+          ? { 
+              ...m, 
+              likes_count: Math.max((m.likes_count || 1) - 1, 0),
+              // We refetch or filter the likes. 
+              // Since we don't always know which user_id was deleted from the payload,
+              // filtering locally is tricky. The safest way is to trigger a quick fetch:
+            } 
+          : m
+      )
+    );
+    
+    // Optional: Refresh data to ensure the heart turns gray correctly
+    fetchMessages(); 
+  })
+  .subscribe();
+  
+    return () => {
 
-      // ✅ Decrement likes locally
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === message_id ? { ...m, likes_count: Math.max((m.likes_count || 1) - 1, 0) } : m
-        )
-      );
-    })
-    .subscribe();
-
-  return () => {
     supabase.removeChannel(messagesChannel);
+
     supabase.removeChannel(likesChannel);
+
   };
+
 }, []);
 
   // ============================================================
@@ -688,19 +709,30 @@ const deleteMessage = async (msg) => {
 
             {/* Actions */}
             <div className="lc-actions">
+
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleLike(m.id);
-                }}
-                className="lc-like-btn"
-              >
-                <FontAwesomeIcon
-                  icon={m.likes_count > 0 ? solidHeart : regularHeart}
-                  className={m.likes_count > 0 ? "liked" : ""}
-                />
-                <span> {m.likes_count || 0}</span>
-              </button>
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleLike(m.id);
+              }}
+                     className="lc-like-btn"
+                   >
+         <FontAwesomeIcon
+          
+           icon={
+             m.message_likes?.some((like) => like.user_id === userId)
+               ? solidHeart
+               : regularHeart
+           }
+           /* Only apply the "liked" (red) class if the user specifically liked it */
+           className={
+             m.message_likes?.some((like) => like.user_id === userId) 
+               ? "liked" 
+               : ""
+           }
+         />
+         <span> {m.likes_count || 0}</span>
+       </button>
 
               <div
                 className="lc-actions-2"

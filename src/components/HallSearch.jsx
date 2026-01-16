@@ -652,7 +652,7 @@ useEffect(() => {
     {isLocating && (
   <div className="location-loader">
     <div className="spinner"></div>
-    <p>Fetching your location…</p>
+    <p>Getting your location…</p>
   </div>
 )}
 
@@ -761,7 +761,7 @@ useEffect(() => {
 
 
   {currentLocation && (
-    <Marker key="user-location"  position={[currentLocation.lat, currentLocation.lng]}icon={currentLocationIcon}>
+    <Marker key="permanent-user-marker" position={[currentLocation.lat, currentLocation.lng]}icon={currentLocationIcon}>
       <Popup> You are at {areaName}
         <button onClick={() => shareToChatAndExternal({ lat: currentLocation.lat, lng: currentLocation.lng, areaName })}>Share Location</button>
  </Popup>
@@ -802,7 +802,9 @@ useEffect(() => {
 
  {halls.map((hall) => {
   const isSelected = selectedHall?.code === hall.code;
-
+    // If this hall is the one currently highlighted, 
+  // we don't need to render the "smallHallIcon" under the "highlightIcon"
+  if (isSelected) return null;
   return (
     <Marker
       key={hall.code}

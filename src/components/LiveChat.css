@@ -639,8 +639,13 @@ padding:0.5rem;
 
 .lc-like-btn .liked {
   color: red;
+  filter: drop-shadow(0 0 2px rgba(255, 77, 77, 0.5));
+  border: none;
 }
 
+.lc-like-btn {
+  color: #f1eeee; 
+}
 .animate-floatUp {
   animation: floatUp 1s ease-out forwards;
   position:absolute;
