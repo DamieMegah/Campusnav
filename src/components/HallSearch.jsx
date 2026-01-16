@@ -530,59 +530,36 @@ const handleLocateMe = () => {
     return;
   }
 
-  // Clear previous watcher
+  // 1. Clear any existing watch to prevent "Double Permission" overlays
   if (watchIdRef.current !== null) {
     navigator.geolocation.clearWatch(watchIdRef.current);
-    watchIdRef.current = null;
   }
 
   setIsLocating(true);
   setShowButton(false);
 
-  navigator.geolocation.getCurrentPosition(
+  // 2. Single Watch instead of getCurrentPosition + watchPosition
+  watchIdRef.current = navigator.geolocation.watchPosition(
     (pos) => {
-      setTimeout(() => {
-        setCurrentLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-
-        setIsLocating(false);
-
-        watchIdRef.current = navigator.geolocation.watchPosition(
-          (pos) => {
-            setCurrentLocation({
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-            });
-          },
-          (err) => {
-            console.warn("Live tracking error:", err.code, err.message);
-          },
-          {
-            enableHighAccuracy: true,
-            maximumAge: 5000,
-          }
-        );
-      }, 1000);
+      setCurrentLocation({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      });
+      setIsLocating(false); // Stop loader once we have the first point
     },
     (err) => {
-      console.error("Initial location failed:", err.code, err.message);
       setIsLocating(false);
       setShowButton(true);
-
-      if (err.code === 1) {
-        alert("Location permission denied");
-      } else if (err.code === 2) {
-        alert("Location unavailable. Turn on Wi-Fi or GPS.");
-      } else if (err.code === 3) {
-        alert("Location timed out. Move to open area.");
-      }
+      console.error("Location Error:", err);
+      
+      if (err.code === 3) alert("Timeout: Try moving closer to a window.");
+      else if (err.code === 1) alert("Permission denied. Check overlay settings.");
+      else alert("Location unavailable.");
     },
     {
-      enableHighAccuracy: true,
-      timeout: 20000,
-      maximumAge: 0,
+      enableHighAccuracy: true, 
+      maximumAge: 5000, // Allow 5-second old data for faster initial lock
+      timeout: 15000,   // Wait up to 15 seconds
     }
   );
 };
@@ -598,18 +575,32 @@ useEffect(() => {
 
 
   const getDirectionsUrl = () => {
-    if (currentLocation && selectedHall) {
-      return `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${selectedHall.lat},${selectedHall.lng}`;
-    }
-    return "#";
-  };
+  if (currentLocation && selectedHall) {
+    return `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${selectedHall.lat},${selectedHall.lng}&travelmode=walking`;
+  }
+  return "#";
+};
 
-  const resetAll = () => {
-  setShowModal(false);
-  setOpenMenu(false);
+ const resetAll = () => {
+  // 1. Clear State
+  setQuery("");
   setSelectedHall(null);
   setCurrentLocation(null);
+  setSharedLocation(null);
+  setShowSuggestions(false);
+  setIsLocating(false);
+  setShowButton(true);
+
+  // 2. Stop GPS tracking if it's running
+  if (watchIdRef.current !== null) {
+    navigator.geolocation.clearWatch(watchIdRef.current);
+    watchIdRef.current = null;
+  }
+
+  // 3. Clear URL parameters (optional but recommended)
+  navigate("/", { replace: true });
 };
+
 
 useEffect(() => {
   if (!currentLocation || !selectedHall) return;
@@ -631,6 +622,8 @@ useEffect(() => {
 }, [currentLocation]);
 
 
+
+
   return (
     <div className="input-container">
       
@@ -648,6 +641,14 @@ useEffect(() => {
         />
         <button className="search-button" onClick={handleSearch}>Search</button>
       </div>
+
+           {/* The Reset Button */}
+       {(query || selectedHall || currentLocation || sharedLocation) && (
+         <button className="reset-button" onClick={resetAll}>
+           <i className="fas fa-sync-alt"></i> Reset
+         </button>
+       )}
+   
     {isLocating && (
   <div className="location-loader">
     <div className="spinner"></div>
