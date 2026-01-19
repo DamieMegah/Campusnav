@@ -35,11 +35,7 @@ const CompassDistance = ({ currentLocation, selectedHall }) => {
     return (brng + 360) % 360; // Normalize 0–360
   };
 
-  
 
-const ARRIVAL_DISTANCE = 15; // meters
-const [hasArrived, setHasArrived] = useState(false);
-const arrivalAudio = useRef(new Audio("/arrival.mp3"));
 
 useEffect(() => {
   arrivalAudio.current.load(); // preload
@@ -69,15 +65,7 @@ useEffect(() => {
   // ARRIVAL CHECK 
   const arrived = dist * 1000 <= ARRIVAL_DISTANCE;
 
-  if (arrived && !hasArrived) {
-    setHasArrived(true);
-
-    if (navigator.vibrate) {
-      navigator.vibrate([200, 100, 200]);
-    }
-
-   arrivalAudio.current.play().catch(() => {});
-  }
+  
 }, [currentLocation, selectedHall]);
 
   if (!currentLocation || !selectedHall) return null;

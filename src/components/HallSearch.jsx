@@ -31,7 +31,7 @@ import scienceComplex from '../assets/scienceComp.jpg';
     { name: "Yusuf Grillo Art Gallery", code: "ART", img: "/images/grillo.jpg", lat: 6.517642107970536, lng: 3.373129954954516 },
     { name: "Art Complex", code: "ART COMPLEX", img: "/images/art-complex.jpg", lat: 6.517357700896631, lng: 3.3730709463357673 },
     { name: "Science Complex", code: "SCI", img: scienceComplex, lat: 6.51767, lng: 3.37258 },
-    { name: "Test", code: "Film ", img: "/images/cinema.jpg", lat: 6.49175, lng: 3.35699 },
+    { name: "Test", code: "Film ", img: "/images/cinema.jpg", lat: 6.49360, lng: 3.35717},
      { name: "Cinema", code: "Film House", img: "/images/cinema.jpg", lat: 6.49171, lng: 3.35681 },
     { name: "Yaba College Of Technology", code: "YCT", img: "/images/yct.jpg", lat:6.519308385801105, lng: 3.37507094 },
     { name: "Skill Acquisition Center", code: "SAC", img: "/images/sac.jpg", lat: 6.51891, lng: 3.37218 },
@@ -121,11 +121,52 @@ const HallSearch = () => {
   const [sharedLocation, setSharedLocation] = useState(null);
   const [isNearby, setIsNearby] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const ARRIVAL_DISTANCE = 25; // meters (realistic)
+  const [hasArrived, setHasArrived] = useState(false);
+  const arrivalAudio = useRef(new Audio("/arrival.mp3"));
 
-  
+
+  const unlockAudio = () => {
+  arrivalAudio.current.play()
+    .then(() => {
+      arrivalAudio.current.pause();
+      arrivalAudio.current.currentTime = 0;
+    })
+    .catch(() => {});
+};
+
+
+
+  useEffect(() => {
+  setHasArrived(false);
+}, [selectedHall?.code]);
 
   //PROXIMITY CHECKER LOGIC
   const PROXIMITY_RADIUS = 80; // meters
+
+  useEffect(() => {
+  if (!currentLocation || !selectedHall || hasArrived) return;
+
+  const distance = getDistanceInMeters(
+    currentLocation.lat,
+    currentLocation.lng,
+    selectedHall.lat,
+    selectedHall.lng
+  );
+
+  if (distance <= ARRIVAL_DISTANCE) {
+    setHasArrived(true);
+
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200]);
+    }
+
+    arrivalAudio.current.play().catch(() => {});
+  }
+}, [currentLocation, selectedHall, hasArrived]);
+
+
+
 
   useEffect(() => {
   if (!currentLocation) return;
@@ -529,7 +570,7 @@ const handleLocateMe = () => {
     alert("Geolocation not supported");
     return;
   }
-
+  unlockAudio();
   setShowButton(false);
   setIsLocating(true);
 
@@ -604,12 +645,7 @@ useEffect(() => {
       selectedHall.lng
     );
 
-  if (distance <= 15) {
-    supabase.from("hall_visits").insert({
-      hall_code: selectedHall.code,
-      arrived: true,
-    });
-  }
+  
 }, [currentLocation]);
 
 
@@ -717,16 +753,24 @@ useEffect(() => {
     />
   )}
 
+  {hasArrived && (
+  <div className="arrive-message">
+    You have arrived "{selectedHall.name}!". Look around for the building.
+  </div>
+)}
         <MapContainer
   ref={mapRef}
   center={[6.517496274395178, 3.373883655685138]}
   zoom={17}
   whenCreated={(map) => { mapRef.current = map; }}
 >
+
+
   <TileLayer
     url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
     attribution='© <a href="https://carto.com/attributions">CARTO</a>'
   />
+
 
   {/* 1. SHARED LOCATION MARKER (from URL) */}
   {sharedLocation && !selectedHall && (
@@ -739,10 +783,10 @@ useEffect(() => {
     </Marker>
   )}
 
-  {/* 2. LIVE USER LOCATION MARKER */}
+  {/* LIVE USER LOCATION MARKER */}
   {currentLocation && (
     <Marker 
-      key="user-live-gps"  // Hardcoded unique key prevents duplication
+      key="user-live-gps"  
       position={[currentLocation.lat, currentLocation.lng]} 
       icon={currentLocationIcon}
     >
@@ -756,15 +800,13 @@ useEffect(() => {
     </Marker>
   )}
 
-  {/* 3. STATIC HALL MARKERS (The most likely cause of duplication) */}
+  {/* . STATIC HALL MARKERS (The most likely cause of duplication) */}
   {halls.map((hall) => {
     const isSelected = selectedHall?.code === hall.code;
-    
-    // We only render a special marker if it's the one the user selected
-    // or a small dot for the others
+   
     return (
       <Marker 
-        key={`hall-${hall.code}`} // Use the hall code as a unique prefix
+        key={`hall-${hall.code}`} 
         position={[hall.lat, hall.lng]}
         icon={isSelected ? highlightIcon : smallHallIcon} // highlightIcon only on the active one
       >
