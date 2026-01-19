@@ -31,7 +31,7 @@ import scienceComplex from '../assets/scienceComp.jpg';
     { name: "Yusuf Grillo Art Gallery", code: "ART", img: "/images/grillo.jpg", lat: 6.517642107970536, lng: 3.373129954954516 },
     { name: "Art Complex", code: "ART COMPLEX", img: "/images/art-complex.jpg", lat: 6.517357700896631, lng: 3.3730709463357673 },
     { name: "Science Complex", code: "SCI", img: scienceComplex, lat: 6.51767, lng: 3.37258 },
-    { name: "Test", code: "Film House", img: "/images/cinema.jpg", lat: 6.49175, lng: 3.35699 },
+    { name: "Test", code: "Film ", img: "/images/cinema.jpg", lat: 6.49175, lng: 3.35699 },
      { name: "Cinema", code: "Film House", img: "/images/cinema.jpg", lat: 6.49171, lng: 3.35681 },
     { name: "Yaba College Of Technology", code: "YCT", img: "/images/yct.jpg", lat:6.519308385801105, lng: 3.37507094 },
     { name: "Skill Acquisition Center", code: "SAC", img: "/images/sac.jpg", lat: 6.51891, lng: 3.37218 },
@@ -83,11 +83,10 @@ const currentLocationIcon = L.divIcon({
 
 const smallHallIcon = L.divIcon({
   className: "small-hall-marker",
-  html: '<div class="smallDot"></div>',
+  html: '<div class="smallDot" style="width: 8px; height: 8px; background-color: #555; border-radius: 50%; border: 1px solid white;"></div>',
   iconSize: [8, 8],
   iconAnchor: [4, 4],
 });
-
 
 //CALCULATING DISTANCE LOGIC FOR GEOFENCING -> BY AI
 function getDistanceInMeters(lat1, lng1, lat2, lng2) {
@@ -123,6 +122,7 @@ const HallSearch = () => {
   const [isNearby, setIsNearby] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
 
+  
 
   //PROXIMITY CHECKER LOGIC
   const PROXIMITY_RADIUS = 80; // meters
@@ -316,7 +316,7 @@ useEffect(() => {
 
 
   useEffect(() => {
-  //  fly the map there location/hall
+  // If a hall or shared location is set, fly the map there
   const target = selectedHall || sharedLocation;
   
   if (mapRef.current && target) {
@@ -363,12 +363,12 @@ async function shareHall(hall) {
   const text = `Check out ${hall.name},  on CampusNav+  yctcampusnav.netlify.app`;
 
   try {
-    //  Fetch hall image & convert to File
+    // 1️⃣ Fetch hall image & convert to File
     const response = await fetch(hall.img);
     const blob = await response.blob();
     const file = new File([blob], `${hall.code}.jpg`, { type: blob.type });
 
-    // Try Web Share API with image
+    // 2️⃣ Try Web Share API with image
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         title: "CampusNav+ Hall",
@@ -380,14 +380,14 @@ async function shareHall(hall) {
       return;
     }
 
-    // If navigator.share exists but doesn’t support files, share text only
+    // 3️⃣ If navigator.share exists but doesn’t support files, share text only
     if (navigator.share) {
       await navigator.share({ title: "CampusNav+ Hall", text, url });
       console.log("Hall shared without image (fallback)");
       return;
     }
 
-    //  WhatsApp fallback (open with image + caption)
+    // 4️⃣ WhatsApp fallback (open with image + caption)
     const waText = encodeURIComponent(`${text} \n${url}`);
     const waImage = encodeURIComponent(hall.img);
     window.open(
@@ -530,40 +530,30 @@ const handleLocateMe = () => {
     return;
   }
 
-  // 1. Clear any existing watch to prevent "Double Permission" overlays
-  if (watchIdRef.current !== null) {
-    navigator.geolocation.clearWatch(watchIdRef.current);
-  }
-
-  setIsLocating(true);
   setShowButton(false);
+  setIsLocating(true);
 
-  // 2. Single Watch instead of getCurrentPosition + watchPosition
   watchIdRef.current = navigator.geolocation.watchPosition(
     (pos) => {
       setCurrentLocation({
         lat: pos.coords.latitude,
         lng: pos.coords.longitude,
       });
-      setIsLocating(false); // Stop loader once we have the first point
+      setIsLocating(false);
     },
     (err) => {
+      console.error(err);
       setIsLocating(false);
       setShowButton(true);
-      console.error("Location Error:", err);
-      
-      if (err.code === 3) alert("Timeout: Try moving closer to a window.");
-      else if (err.code === 1) alert("Permission denied. Check overlay settings.");
-      else alert("Location unavailable.");
+      alert("Live tracking failed, Please check your GPS settings");
     },
     {
-      enableHighAccuracy: true, 
-      maximumAge: 5000, // Allow 5-second old data for faster initial lock
-      timeout: 15000,   // Wait up to 15 seconds
+      enableHighAccuracy: true,
+      maximumAge: 2000,
+      timeout: 10000,
     }
   );
 };
-
 
 useEffect(() => {
   return () => {
@@ -575,13 +565,15 @@ useEffect(() => {
 
 
   const getDirectionsUrl = () => {
-  if (currentLocation && selectedHall) {
-    return `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${selectedHall.lat},${selectedHall.lng}&travelmode=walking`;
-  }
-  return "#";
-};
+    if (currentLocation && selectedHall) {
+      return `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat},${currentLocation.lng}&destination=${selectedHall.lat},${selectedHall.lng}`;
+    }
+    return "#";
+  };
 
- const resetAll = () => {
+
+
+const resetAll = () => {
   // 1. Clear State
   setQuery("");
   setSelectedHall(null);
@@ -597,10 +589,9 @@ useEffect(() => {
     watchIdRef.current = null;
   }
 
-  // 3. Clear URL parameters (optional but recommended)
+  // 3. Clear the URL parameters by navigating back to home
   navigate("/", { replace: true });
 };
-
 
 useEffect(() => {
   if (!currentLocation || !selectedHall) return;
@@ -622,8 +613,6 @@ useEffect(() => {
 }, [currentLocation]);
 
 
-
-
   return (
     <div className="input-container">
       
@@ -640,28 +629,27 @@ useEffect(() => {
           }}
         />
         <button className="search-button" onClick={handleSearch}>Search</button>
+        {/* ONLY SHOW RESET IF STATE IS ACTIVE */}
+  {(query || selectedHall || currentLocation || sharedLocation) && (
+    <button className="reset-button" onClick={resetAll} style={{ marginLeft: '10px' }}>
+      <i className="fas fa-sync-alt"></i> Reset
+    </button>
+  )}
       </div>
-
-           {/* The Reset Button */}
-       {(query || selectedHall || currentLocation || sharedLocation) && (
-         <button className="reset-button" onClick={resetAll}>
-           <i className="fas fa-sync-alt"></i> Reset
-         </button>
-       )}
-   
-    {isLocating && (
+     {/* THE THROBBER/LOADER */}
+{isLocating && (
   <div className="location-loader">
     <div className="spinner"></div>
-    <p>Getting your location…</p>
+    <p>Fetching your location...</p>
   </div>
 )}
 
+{/* THE BUTTON */}
 {showButton && !isLocating && (
   <button className="locate-button" onClick={handleLocateMe}>
     <i className="fas fa-map-marker-alt"></i> My Location
   </button>
 )}
-
 
       {currentLocation && (
         <div className="current-location">
@@ -729,114 +717,84 @@ useEffect(() => {
     />
   )}
 
-         <MapContainer
-             ref={mapRef}
-             center={[6.517496274395178, 3.373883655685138]}
-             zoom={17}
-             whenCreated={(map) => { mapRef.current = map; }}
-      >
-
-        {sharedLocation && (
-             <Marker
-               position={[sharedLocation.lat, sharedLocation.lng]}
-               icon={highlightIcon}
-             >
-               <Popup>
-                  Shared Location
-               </Popup>
-             </Marker>
-         )}
-
-
-  {currentLocation && selectedHall && (
-  <CompassDistance 
-    currentLocation={currentLocation}
-    selectedHall={selectedHall}
+        <MapContainer
+  ref={mapRef}
+  center={[6.517496274395178, 3.373883655685138]}
+  zoom={17}
+  whenCreated={(map) => { mapRef.current = map; }}
+>
+  <TileLayer
+    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+    attribution='© <a href="https://carto.com/attributions">CARTO</a>'
   />
-)}
- <TileLayer
-  url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-  attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-/>
 
-
-  {currentLocation && (
-    <Marker key="permanent-user-marker" position={[currentLocation.lat, currentLocation.lng]}icon={currentLocationIcon}>
-      <Popup> You are at {areaName}
-        <button onClick={() => shareToChatAndExternal({ lat: currentLocation.lat, lng: currentLocation.lng, areaName })}>Share Location</button>
- </Popup>
+  {/* 1. SHARED LOCATION MARKER (from URL) */}
+  {sharedLocation && !selectedHall && (
+    <Marker
+      key="shared-loc-marker" 
+      position={[sharedLocation.lat, sharedLocation.lng]}
+      icon={highlightIcon}
+    >
+      <Popup>Shared Location</Popup>
     </Marker>
   )}
 
-{(selectedHall || sharedLocation) && (
-  <Marker
-    ref={markerRef}
-    position={[
-      (selectedHall || sharedLocation).lat,
-      (selectedHall || sharedLocation).lng,
-    ]}
-    icon={highlightIcon}
-  >
-    <Popup>
-      {selectedHall ? (
-        <div>
-          <strong>{selectedHall.name}</strong>
-          <br />
-          <button onClick={() =>
-            shareToChatAndExternal({
-              lat: selectedHall.lat,
-              lng: selectedHall.lng,
-              hallName: selectedHall.name
-            })
-          }>
-            Share Hall
-          </button>
-        </div>
-      ) : (
-        "Shared Location"
-      )}
-    </Popup>
-  </Marker>
-)}
-
-
- {halls.map((hall) => {
-  const isSelected = selectedHall?.code === hall.code;
-    // If this hall is the one currently highlighted, 
-  // we don't need to render the "smallHallIcon" under the "highlightIcon"
-  if (isSelected) return null;
-  return (
-    <Marker
-      key={hall.code}
-      position={[hall.lat, hall.lng]}
-      icon={isSelected ? highlightIcon : smallHallIcon}
+  {/* 2. LIVE USER LOCATION MARKER */}
+  {currentLocation && (
+    <Marker 
+      key="user-live-gps"  // Hardcoded unique key prevents duplication
+      position={[currentLocation.lat, currentLocation.lng]} 
+      icon={currentLocationIcon}
     >
-      <Popup>{hall.name}</Popup>
+      <Popup> 
+        You are at {areaName || "Your Location"}
+        <br />
+        <button onClick={() => shareToChatAndExternal({ lat: currentLocation.lat, lng: currentLocation.lng, areaName })}>
+          Share Location
+        </button>
+      </Popup>
     </Marker>
-  );
-})}
+  )}
 
+  {/* 3. STATIC HALL MARKERS (The most likely cause of duplication) */}
+  {halls.map((hall) => {
+    const isSelected = selectedHall?.code === hall.code;
+    
+    // We only render a special marker if it's the one the user selected
+    // or a small dot for the others
+    return (
+      <Marker 
+        key={`hall-${hall.code}`} // Use the hall code as a unique prefix
+        position={[hall.lat, hall.lng]}
+        icon={isSelected ? highlightIcon : smallHallIcon} // highlightIcon only on the active one
+      >
+        <Popup>
+          <strong>{hall.name}</strong>
+          {isSelected && (
+            <button onClick={() => shareToChatAndExternal({ lat: hall.lat, lng: hall.lng, hallName: hall.name })}>
+              Share Hall
+            </button>
+          )}
+        </Popup>
+      </Marker>
+    );
+  })}
 
-{currentLocation && selectedHall && mapRef.current && (
-  <RoutingMachine 
-    map={mapRef.current}
-    from={currentLocation}
-    to={selectedHall}
-  />
-)}
-
+  {/* 4. ROUTING & POLYLINE */}
   {currentLocation && selectedHall && (
-  <Polyline
-    positions={[
-      [currentLocation.lat, currentLocation.lng],
-      [selectedHall.lat, selectedHall.lng],
-    ]}
-    color="pink"
-  />
-)}
-
+    <>
+      <RoutingMachine map={mapRef.current} from={currentLocation} to={selectedHall} />
+      <Polyline
+        key="route-line"
+        positions={[
+          [currentLocation.lat, currentLocation.lng],
+          [selectedHall.lat, selectedHall.lng],
+        ]}
+        color="pink"
+      />
+    </>
+  )}
         </MapContainer>
-
 
           {/* Show Directions button */}
           {currentLocation && (

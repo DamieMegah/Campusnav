@@ -277,14 +277,25 @@
 .smallDot {
   width: 8px;
   height: 8px;
-  background: #999;
+  background: #1db6ca;
   border-radius: 50%;
 }
 
 .small-hall-marker {
   width: 8px;
   height: 8px;
+  border-radius: 50%;
+  background: #11dfdf;
+  animation: pulse-small  infinite;
 }
+
+
+@keyframes pulse-small {
+ 0% { transform: scale(0.9); }
+  50% { transform: scale(1.3);  }
+  100% { transform: scale(0.9); }
+}
+
 
 @media (max-width: 768px) {
 
