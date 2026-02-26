@@ -26,14 +26,14 @@ const RoutingMachine = ({ map, from, to }) => {
 
     // Optional logs
     routingControl.on("routesfound", (e) => {
-      console.log("✅ Route found:", e.routes[0]);
+      console.log(" Route found:", e.routes[0]);
     });
 
     routingControl.on("routingerror", (err) => {
       console.error("❌ Routing error:", err);
     });
 
-    // 🚫 Instead of removing immediately, delay cleanup to avoid async conflict
+    //  Instead of removing immediately, delay cleanup to avoid async conflict
     return () => {
       if (routingControl && map.hasLayer(routingControl)) {
         map.removeControl(routingControl);

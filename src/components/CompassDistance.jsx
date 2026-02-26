@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+
 
 const CompassDistance = ({ currentLocation, selectedHall }) => {
   const [distance, setDistance] = useState(null);
@@ -34,27 +35,51 @@ const CompassDistance = ({ currentLocation, selectedHall }) => {
     return (brng + 360) % 360; // Normalize 0–360
   };
 
-  useEffect(() => {
-    if (currentLocation && selectedHall) {
-      const dist = calculateDistance(
-        currentLocation.lat,
-        currentLocation.lng,
-        selectedHall.lat,
-        selectedHall.lng
-      );
-      setDistance(dist);
 
-      const brng = calculateBearing(
-        currentLocation.lat,
-        currentLocation.lng,
-        selectedHall.lat,
-        selectedHall.lng
-      );
-      setBearing(brng);
-    }
-  }, [currentLocation, selectedHall]);
+
+useEffect(() => {
+  arrivalAudio.current.load(); // preload
+}, []);
+
+
+useEffect(() => {
+  if (!currentLocation || !selectedHall) return;
+
+  const dist = calculateDistance(
+    currentLocation.lat,
+    currentLocation.lng,
+    selectedHall.lat,
+    selectedHall.lng
+  );
+
+  setDistance(dist);
+
+  const brng = calculateBearing(
+    currentLocation.lat,
+    currentLocation.lng,
+    selectedHall.lat,
+    selectedHall.lng
+  );
+  setBearing(brng);
+
+  // ARRIVAL CHECK 
+  const arrived = dist * 1000 <= ARRIVAL_DISTANCE;
+
+  
+}, [currentLocation, selectedHall]);
 
   if (!currentLocation || !selectedHall) return null;
+
+  //CARDINALS TO DISPLAY
+  const getCardinalDirection = (bearing) => {
+  const directions = [
+    "N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"
+  ];
+  const index = Math.round(bearing / 45);
+  return directions[index];
+};
+
+  
 
   return (
     <div
@@ -71,12 +96,31 @@ const CompassDistance = ({ currentLocation, selectedHall }) => {
         zIndex: 10000,
       }}
     >
-      <div>
-        <strong>Distance:</strong>{" "}
-        {distance < 1
-          ? `${(distance * 1000).toFixed(0)} m`
-          : `${distance.toFixed(2)} km`}
-      </div>
+         <div>
+            {distance < 1 ? (
+              <strong>
+                You are {(distance * 1000).toFixed(0)} meters away
+              </strong>
+            ) : (
+              <strong>
+                You are {distance.toFixed(2)} km away
+              </strong>
+            )}
+         </div>
+
+       {distance * 1000 <= 15 && (
+          <div style={{ color: "green", marginTop: "3px", fontSize: "0.845rem" }}>
+            You have arrived, Look around for the building
+            
+          </div>
+         )}
+
+         <div style={{ fontSize: "0.7rem", marginTop: "4px" }}>
+              Heading: <strong>{getCardinalDirection(bearing)}</strong>
+         </div>
+
+
+
 
       <div style={{ marginTop: "6px",fontSize: "0.6rem",
             color: "red", }}>

@@ -18,13 +18,13 @@ const GRADE_POINTS = {
 };
 
 const GpaCalculator = () => {
-  // ✅ Pull your global state
+  //  Pull your global state
   const { cgpaInputs, setCgpaInputs } = useAppState();
 
-  // ✅ Instead of local state, use context (persist across pages)
+  // Instead of local state, use context (persist across pages)
   const [gpa, setGpa] = useState(null);
 
-  // ✅ Initialize courses from context, fallback to one row if empty
+  // Initialize courses from context, fallback to one row if empty
   const courses = cgpaInputs.courses || [{ unit: '', grade: 'Grade' }];
 
   const setCourses = (newCourses) => {
@@ -69,7 +69,7 @@ const GpaCalculator = () => {
 
   return (
     <div className="gpa">
-      <h2>🧮 GPA Calculator</h2>
+      <h2> GPA Calculator</h2>
       <small>
         Track your performance and analyze how much work is required in the current semester.
       </small>
@@ -105,7 +105,7 @@ const GpaCalculator = () => {
 
       {gpa && (
         <p>
-          ✅ Your GPA for this semester will be: <span>{gpa}</span>
+           Your GPA for this semester will be: <span>{gpa}</span>
         </p>
       )}
     </div>

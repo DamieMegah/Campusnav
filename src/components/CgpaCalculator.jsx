@@ -54,7 +54,7 @@ const CgpaCalculator = () => {
 
   return (
     <div>
-      <h2 className="cgpa container">📊 CGPA Calculator</h2>
+      <h2 className="cgpa container">CGPA Calculator</h2>
       <small>Get insight on how to achive your target grade, get started </small>
 
       {semesters.map((sem, index) => (

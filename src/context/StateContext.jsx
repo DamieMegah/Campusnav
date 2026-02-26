@@ -1,5 +1,4 @@
-// src/context/StateContext.jsx
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const StateContext = createContext();
 export const useAppState = () => useContext(StateContext);
@@ -11,21 +10,44 @@ export function StateProvider({ children }) {
   const [scrollPositions, setScrollPositions] = useState({});
   const [messages, setMessages] = useState([]);
 
+  // Load nickname from localStorage on first render
+  const [chatState, setChatState] = useState(() => {
+    const savedName = localStorage.getItem("chatNickname");
+    return {
+      nickname: savedName || "",
+      input: "",
+      replyTo: null,
+    };
+  });
+
+  // Save nickname to localStorage whenever it changes
+  useEffect(() => {
+    if (chatState.nickname) {
+      localStorage.setItem("chatNickname", chatState.nickname);
+    }
+  }, [chatState.nickname]);
+
   const [cgpaCalcState, setCgpaCalcState] = useState({
-    semesters: [{ gpa: '', units: '' }],
+    semesters: [{ gpa: "", units: "" }],
     cgpa: null,
   });
-  const [activeCgpaComponent, setActiveCgpaComponent] = useState('predictor');
-  const [chatState, setChatState] = useState({
-    nickname: "",
-    input: "",
-    replyTo: null,
-  });
+  const [activeCgpaComponent, setActiveCgpaComponent] = useState("predictor");
 
   return (
     <StateContext.Provider
-      value={{ cgpaInputs, setCgpaInputs, searchData, setSearchData, scrollPositions, setScrollPositions, setActiveCgpaComponent, 
-         chatState, setChatState,  activeCgpaComponent, setActiveCgpaComponent,}}
+      value={{
+        cgpaInputs,
+        setCgpaInputs,
+        searchData,
+        setSearchData,
+        scrollPositions,
+        setScrollPositions,
+        setActiveCgpaComponent,
+        chatState,
+        setChatState,
+        activeCgpaComponent,
+        setActiveCgpaComponent,
+      }}
     >
       {children}
     </StateContext.Provider>

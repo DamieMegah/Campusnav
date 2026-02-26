@@ -4,6 +4,7 @@
   border-radius: 8px;
   padding: 1rem;
   background:#242424d5;
+  color:var(--white);
 }
 
 .grading-summary {
